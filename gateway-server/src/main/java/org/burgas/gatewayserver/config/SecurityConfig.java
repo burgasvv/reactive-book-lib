@@ -21,36 +21,32 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
-    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity security) {
-        return security
-                .httpBasic(Customizer.withDefaults())
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        return http
+
+                .authenticationManager(authenticationManager())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeExchange(
                         exchange -> exchange
-                                
+
                                 .pathMatchers("/identities/create")
                                 .permitAll()
 
                                 .pathMatchers(
-                                        "/identities/","/identities/username","/identities/edit","/identities/delete",
-                                        "/subscriptions/**"
+                                        "/identities","/identities/{username}","/identities/edit","/identities/delete",
+                                        "/authorities/**", "/subscriptions/**"
                                 )
-                                .hasAnyAuthority("USER")
-
-                                .pathMatchers(
-                                        "/authorities","/authorities/{authority-id}",
-                                        "/authorities/create","/authorities/edit"
-                                )
-                                .hasAnyAuthority("ADMIN")
+                                .hasAnyAuthority("USER", "ADMIN")
                 )
                 .formLogin(Customizer.withDefaults())
                 .logout(Customizer.withDefaults())
+
                 .build();
     }
 
     @Bean
-    public ReactiveAuthenticationManager reactiveAuthenticationManager() {
+    public ReactiveAuthenticationManager authenticationManager() {
         UserDetailsRepositoryReactiveAuthenticationManager manager =
                 new UserDetailsRepositoryReactiveAuthenticationManager(customUserDetailsService);
         manager.setPasswordEncoder(passwordEncoder());

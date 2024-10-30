@@ -21,8 +21,8 @@ public class IdentityResponse implements UserDetails {
     private String username;
     private String password;
     private String email;
-    private AuthorityResponse authorityResponse;
     private Boolean enabled;
+    private AuthorityResponse authorityResponse;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -48,6 +48,6 @@ public class IdentityResponse implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return enabled != null ? enabled : UserDetails.super.isCredentialsNonExpired();
+        return enabled != null ? enabled : UserDetails.super.isEnabled();
     }
 }

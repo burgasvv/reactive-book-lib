@@ -25,7 +25,7 @@ public class IdentityRouter {
     @Bean
     public RouterFunction<ServerResponse> getIdentityByUsername() {
         return RouterFunctions.route(
-                RequestPredicates.GET("/identities/username"),
+                RequestPredicates.GET("/identities/{username}"),
                 identityWebHandler::handleFindIdentityByUsername
         );
     }

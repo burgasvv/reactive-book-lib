@@ -57,6 +57,7 @@ public class IdentityMapper {
                     .username(identity.getUsername())
                     .password(identity.getPassword())
                     .email(identity.getEmail())
+                    .enabled(identity.getEnabled())
                     .authorityResponse(
                             authorityService.findById(
                                     String.valueOf(identity.getAuthorityId())

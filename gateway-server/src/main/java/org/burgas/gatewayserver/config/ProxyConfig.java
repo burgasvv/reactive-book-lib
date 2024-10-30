@@ -9,19 +9,19 @@ import org.springframework.context.annotation.Configuration;
 public class ProxyConfig {
 
     @Bean
-    public RouteLocator routeLocator(RouteLocatorBuilder routeLocatorBuilder) {
-        return routeLocatorBuilder.routes()
+    public RouteLocator routeLocator(RouteLocatorBuilder builder) {
+        return builder.routes()
                 .route(
                         "identities",
                         predicateSpec -> predicateSpec
                                 .path("/identities/**", "/authorities/**")
-                                .uri("lb:http://identity-service")
+                                .uri("lb://identity-service")
                 )
                 .route(
                         "subscriptions",
                         predicateSpec -> predicateSpec
                                 .path("/subscriptions/**")
-                                .uri("lb:http://subscription-service")
+                                .uri("lb://subscription-service")
                 )
                 .build();
     }

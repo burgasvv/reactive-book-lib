@@ -15,5 +15,6 @@ public class IdentityResponse {
     private String username;
     private String password;
     private String email;
+    private Boolean enabled;
     private AuthorityResponse authorityResponse;
 }

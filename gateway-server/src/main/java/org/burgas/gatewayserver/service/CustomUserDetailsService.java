@@ -19,7 +19,10 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
     public Mono<UserDetails> findByUsername(String username) {
         try {
             //noinspection BlockingMethodInNonBlockingContext
-            return Mono.just(restTemplateHandler.getIdentityByUsername(username).toFuture().get());
+            return Mono.just(
+                    restTemplateHandler.getIdentityByUsername(username)
+                            .toFuture().get()
+            );
 
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
