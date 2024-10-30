@@ -1,0 +1,19 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+###
+POST http://localhost:8765/identities/create
+Content-Type: application/json
+
+{
+  "id": 0,
+  "username": "somebody",
+  "password": "somebody",
+  "email": "somebody@gmail.com"
+}
+
+###
+GET http://localhost:8765/identities
+Content-Type: application/json
+Authorization: Basic burgasvv cg3audio
