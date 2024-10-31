@@ -3,6 +3,7 @@ package org.burgas.identityservice;
 import io.r2dbc.spi.ConnectionFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.ClassPathResource;
@@ -11,6 +12,8 @@ import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
 
 @SpringBootApplication
 @EnableDiscoveryClient
@@ -39,5 +42,25 @@ public class IdentityServiceApplication {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean
+    public WebProperties.Resources webProperties() {
+        return new WebProperties.Resources();
+    }
+
+    @Bean
+    public RequestContextHolder requestContextHolder() {
+        return (RequestContextHolder) RequestContextHolder.getRequestAttributes();
+    }
+
+    @Bean
+    public String string() {
+        return "";
     }
 }

@@ -18,8 +18,8 @@ insert into authority(name) values ('USER');
 insert into authority(name) values ('ADMIN');
 
 insert into identity(username, password, email, authority_id, enabled)
-values ('burgasvv', '$2a$10$WAXGuzDVROFEFv9jUr3qZuXBhKXCuzAWLF.Ia6jmBHgvSEuYxnzZ6',
+values ('admin', '$2a$10$MoN3NPsWEsIagvRv.a5twus02dZKXzmW806.CyJU9Vowvh28oJO82',
         'burgassme@gmail.com', 2, true);
 insert into identity(username, password, email, authority_id, enabled)
-values ('baldahin', '$2a$10$HI77vdVimvu6z2WrQXpazO9zI/NprffkBvqjYvY5g9zZyyPXmO3I2',
-        'baldahin@gmail.com', 1, true);
+values ('user', '$2a$10$SuY8h1Tl3kJbmaEA6z8/EeopEXdudI.7OjD5pLaHaFgPG4P.Fx0jm',
+        'user@gmail.com', 1, true);

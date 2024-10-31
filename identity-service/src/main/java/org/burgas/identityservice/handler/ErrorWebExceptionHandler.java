@@ -1,4 +1,4 @@
-package org.burgas.gatewayserver.handler;
+package org.burgas.identityservice.handler;
 
 import lombok.Getter;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,9 +12,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.reactive.function.server.RequestPredicates;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.reactive.result.view.ViewResolver;
-import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
@@ -26,31 +28,34 @@ public class ErrorWebExceptionHandler extends AbstractErrorWebExceptionHandler {
     private final ServerCodecConfigurer serverCodecConfigurer;
 
     public ErrorWebExceptionHandler(
-            ObjectProvider<ViewResolver> viewResolvers,
-            ServerCodecConfigurer serverCodecConfigurer,
             ErrorAttributes errorAttributes,
             WebProperties.Resources resources,
-            ApplicationContext applicationContext
+            ApplicationContext applicationContext,
+            ObjectProvider<ViewResolver> viewResolvers,
+            ServerCodecConfigurer serverCodecConfigurer
     ) {
         super(errorAttributes, resources, applicationContext);
         this.viewResolvers = viewResolvers;
         this.serverCodecConfigurer = serverCodecConfigurer;
-        super.setMessageWriters(serverCodecConfigurer.getWriters());
         super.setMessageReaders(serverCodecConfigurer.getReaders());
+        super.setMessageWriters(serverCodecConfigurer.getWriters());
         super.setViewResolvers(viewResolvers.orderedStream().toList());
     }
 
     @Override
     protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
-        return RouterFunctions.route(RequestPredicates.all(), this::renderErrorResponse);
+        return RouterFunctions.route(
+                RequestPredicates.all(),
+                request -> {
+                    Map<String, Object> errors = errorAttributes.getErrorAttributes(
+                            request,
+                            ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE)
+                    );
+                    return ServerResponse
+                            .status(HttpStatus.BAD_REQUEST)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(BodyInserters.fromValue(errors));
+                }
+        );
     }
-
-    private Mono<ServerResponse> renderErrorResponse(ServerRequest serverRequest) {
-        Map<String, Object> errorPropertiesMap = getErrorAttributes(serverRequest, ErrorAttributeOptions.defaults());
-
-        return ServerResponse.status(HttpStatus.BAD_REQUEST)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(errorPropertiesMap));
-    }
-
 }

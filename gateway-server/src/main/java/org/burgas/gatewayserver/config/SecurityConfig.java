@@ -24,20 +24,20 @@ public class SecurityConfig {
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         return http
 
-                .authenticationManager(authenticationManager())
+                .httpBasic(Customizer.withDefaults())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeExchange(
-                        exchange -> exchange
+                        exchange -> exchange.anyExchange().authenticated()
 
-                                .pathMatchers("/identities/create")
-                                .permitAll()
-
-                                .pathMatchers(
-                                        "/identities","/identities/{username}","/identities/edit","/identities/delete",
-                                        "/authorities/**", "/subscriptions/**"
-                                )
-                                .hasAnyAuthority("USER", "ADMIN")
+//                                .pathMatchers("/identities/create")
+//                                .permitAll()
+//
+//                                .pathMatchers(
+//                                        "/identities","/identities/{username}","/identities/edit","/identities/delete",
+//                                        "/authorities/**", "/subscriptions/**"
+//                                )
+//                                .hasAnyAuthority("USER", "ADMIN")
                 )
                 .formLogin(Customizer.withDefaults())
                 .logout(Customizer.withDefaults())

@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class IdentityWebHandler {
@@ -36,8 +38,9 @@ public class IdentityWebHandler {
     }
 
     public Mono<ServerResponse> handleUpdateIdentity(ServerRequest serverRequest) {
+        String authorization = serverRequest.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                identityService.update(serverRequest.bodyToMono(IdentityRequest.class)),
+                identityService.update(serverRequest.bodyToMono(IdentityRequest.class), authorization),
                 IdentityResponse.class
         );
     }
