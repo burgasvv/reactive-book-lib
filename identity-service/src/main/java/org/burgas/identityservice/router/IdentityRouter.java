@@ -31,6 +31,14 @@ public class IdentityRouter {
     }
 
     @Bean
+    public RouterFunction<ServerResponse> getIdentityById() {
+        return RouterFunctions.route(
+                RequestPredicates.GET("/identities/identity/{identity-id}"),
+                identityWebHandler::handleFindIdentityById
+        );
+    }
+
+    @Bean
     public RouterFunction<ServerResponse> createIdentity() {
         return RouterFunctions.route()
                 .POST("/identities/create", identityWebHandler::handleCreateIdentity)

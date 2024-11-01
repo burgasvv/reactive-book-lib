@@ -28,16 +28,18 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(Customizer.withDefaults())
                 .authorizeExchange(
-                        exchange -> exchange.anyExchange().authenticated()
+                        exchange -> exchange
 
-//                                .pathMatchers("/identities/create")
-//                                .permitAll()
-//
-//                                .pathMatchers(
-//                                        "/identities","/identities/{username}","/identities/edit","/identities/delete",
-//                                        "/authorities/**", "/subscriptions/**"
-//                                )
-//                                .hasAnyAuthority("USER", "ADMIN")
+                                .pathMatchers("/identities/create", "/auth/principal")
+                                .permitAll()
+
+                                .pathMatchers("/auth/principal",
+                                        "/identities","/identities/{username}",
+                                        "/identities/identity/{identity-id}",
+                                        "/identities/edit","/identities/delete",
+                                        "/authorities/**", "/subscriptions/**"
+                                )
+                                .hasAnyAuthority("USER", "ADMIN")
                 )
                 .formLogin(Customizer.withDefaults())
                 .logout(Customizer.withDefaults())

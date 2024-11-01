@@ -5,6 +5,6 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class IdentityNotAuthenticated extends RuntimeException {
+public class IdentityWrongIssuesException extends RuntimeException {
     private final String message;
 }

@@ -30,10 +30,17 @@ public class IdentityWebHandler {
         );
     }
 
+    public Mono<ServerResponse> handleFindIdentityById(ServerRequest serverRequest) {
+        return ServerResponse.ok().body(
+                identityService.findById(serverRequest.pathVariable("identity-id")),
+                IdentityResponse.class
+        );
+    }
+
     public Mono<ServerResponse> handleCreateIdentity(ServerRequest serverRequest) {
         return ServerResponse.ok().body(
                 identityService.create(serverRequest.bodyToMono(IdentityRequest.class)),
-                IdentityResponse.class
+                String.class
         );
     }
 
@@ -46,9 +53,10 @@ public class IdentityWebHandler {
     }
 
     public Mono<ServerResponse> handleDeleteIdentity(ServerRequest serverRequest) {
+        String authorizationValue = serverRequest.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
                 identityService.delete(
-                        serverRequest.queryParam("identityId").orElse(null)
+                        serverRequest.queryParam("identityId").orElse(null), authorizationValue
                 ),
                 String.class
         );

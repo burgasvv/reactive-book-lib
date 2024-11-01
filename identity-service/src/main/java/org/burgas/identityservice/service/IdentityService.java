@@ -1,12 +1,11 @@
 package org.burgas.identityservice.service;
 
 import lombok.RequiredArgsConstructor;
-import org.burgas.identityservice.dto.IdentityPrincipal;
 import org.burgas.identityservice.dto.IdentityRequest;
 import org.burgas.identityservice.dto.IdentityResponse;
-import org.burgas.identityservice.exception.IdentityNotAuthenticated;
-import org.burgas.identityservice.exception.IdentityNotMatchException;
-import org.burgas.identityservice.handler.RestTemplateHandler;
+import org.burgas.identityservice.entity.Identity;
+import org.burgas.identityservice.exception.IdentityWrongIssuesException;
+import org.burgas.identityservice.handler.WebClientHandler;
 import org.burgas.identityservice.mapper.IdentityMapper;
 import org.burgas.identityservice.repository.IdentityRepository;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
@@ -27,7 +25,7 @@ public class IdentityService {
 
     private final IdentityRepository identityRepository;
     private final IdentityMapper identityMapper;
-    private final RestTemplateHandler restTemplateHandler;
+    private final WebClientHandler webClientHandler;
 
     public Flux<IdentityResponse> findAll() {
         return identityRepository.findAll()
@@ -39,83 +37,81 @@ public class IdentityService {
                 .map(identityMapper::toIdentityResponse);
     }
 
-    @Transactional(
-            isolation = SERIALIZABLE,
-            propagation = REQUIRED,
-            rollbackFor = {
-                    RuntimeException.class,
-                    InterruptedException.class,
-                    ExecutionException.class
-            }
-    )
-    public Mono<IdentityResponse> create(Mono<IdentityRequest> identityRequestMono) {
-        try {
-            //noinspection BlockingMethodInNonBlockingContext
-            return Mono.just(
-                    identityMapper.toIdentityResponse(
-                            identityRepository.save(
-                                    identityMapper.toIdentityCreate(identityRequestMono.toFuture().get())
-                            )
-                                    .toFuture().get()
-                    )
-            );
-
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+    public Mono<IdentityResponse> findById(String identityId) {
+        return identityRepository.findById(Long.valueOf(identityId))
+                .map(identityMapper::toIdentityResponse);
     }
 
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,
             rollbackFor = {
-                    RuntimeException.class,
-                    InterruptedException.class,
-                    ExecutionException.class
+                    Exception.class
+            }
+    )
+    public Mono<String> create(Mono<IdentityRequest> identityRequestMono) {
+        return identityRequestMono.flatMap(
+                identityRequest -> {
+                    Identity create = identityMapper.toIdentityCreate(identityRequest);
+                    return identityRepository.save(create)
+                            .map(identity -> "Пользователь с именем " + identity.getUsername() + " успешно создан");
+                }
+        );
+    }
+
+    @Transactional(
+            isolation = SERIALIZABLE,
+            propagation = REQUIRED,
+            rollbackFor = {
+                    Exception.class
             }
     )
     public Mono<IdentityResponse> update(Mono<IdentityRequest> identityRequestMono, String authorization) {
+        return identityRequestMono.flatMap(
+                identityRequest -> webClientHandler.getPrincipal(authorization)
+                        .flatMap(
+                                identityPrincipal -> {
 
-        try {
-            //noinspection BlockingMethodInNonBlockingContext
-            IdentityPrincipal principal = restTemplateHandler.getPrincipal(authorization).toFuture().get();
+                                    if (identityPrincipal.getIsAuthenticated() &&
+                                        Objects.equals(identityPrincipal.getId(), identityRequest.getId())
+                                    ) {
 
-            if (principal.getIsAuthenticated()) {
-                //noinspection BlockingMethodInNonBlockingContext
-                IdentityRequest identityRequest = identityRequestMono.toFuture().get();
-                if (
-                        Objects.equals(identityRequest.getId(), principal.getId())
-                ) {
-                    //noinspection BlockingMethodInNonBlockingContext
-                    return Mono.just(
-                            identityMapper.toIdentityResponse(
-                                    identityRepository.save(
-                                                    identityMapper.toIdentityUpdate(identityRequest)
-                                            )
-                                            .toFuture().get()
-                            )
-                    );
+                                        Identity update = identityMapper.toIdentityUpdate(identityRequest);
+                                        return identityRepository.save(update)
+                                                .map(identityMapper::toIdentityResponse);
 
-                } else
-                    throw new IdentityNotMatchException("Попытка изменения данных пользователя с чужого аккаунта");
-
-            } else
-                throw new IdentityNotAuthenticated("Пользователь не авторизован");
-
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+                                    } else
+                                        return Mono.error(
+                                                new IdentityWrongIssuesException("Пользователь не авторизован или жулик")
+                                        );
+                                }
+                        )
+        );
     }
 
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,
-            rollbackFor = RuntimeException.class
+            rollbackFor = Exception.class
     )
-    public Mono<String> delete(String identityId) {
-        return identityRepository.deleteById(Long.valueOf(identityId))
-                .then(
-                        Mono.fromCallable(() -> "Пользователь с идентификатором " + identityId + " удален")
+    public Mono<String> delete(String identityId, String authorizationValue) {
+        return webClientHandler.getPrincipal(authorizationValue)
+                .flatMap(
+                        identityPrincipal -> {
+
+                            if (identityPrincipal.getIsAuthenticated() &&
+                                Objects.equals(identityPrincipal.getId(), Long.valueOf(identityId))
+                            ) {
+                                return identityRepository.deleteById(Long.valueOf(identityId))
+                                        .then(
+                                                Mono.fromCallable(() -> "Пользователь с идентификатором "
+                                                                        + identityId + " успешно удален")
+                                        );
+                            } else
+                                return Mono.error(
+                                        new IdentityWrongIssuesException("Пользователь не авторизован или жулик")
+                                );
+                        }
                 );
     }
 }

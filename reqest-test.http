@@ -1,4 +1,14 @@
 ###
+POST http://localhost:8765/authorities/create
+Content-Type: application/json
+Authorization: Basic admin admin
+
+{
+  "id": 0,
+  "name": "MODERATOR"
+}
+
+###
 POST http://localhost:8765/identities/create
 Content-Type: application/json
 
@@ -10,7 +20,24 @@ Content-Type: application/json
 }
 
 ###
+PUT http://localhost:8765/identities/edit
+Content-Type: application/json
+Authorization: Basic somebody somebody
+
+{
+  "id": 3,
+  "username": "somebody777",
+  "email": "somebody777@gmail.com"
+}
+
+###
 GET http://localhost:8765/identities
+Content-Type: application/json
+Authorization: Basic admin admin
+
+###
+@username = somebody
+GET http://localhost:8765/identities/{{username}}
 Content-Type: application/json
 Authorization: Basic admin admin
 
@@ -24,3 +51,31 @@ Authorization: Basic user user
   "username": "user222",
   "email": "user222@mail.ru"
 }
+
+###
+DELETE http://localhost:8765/identities/delete?identityId=2
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic user user
+
+###
+POST http://localhost:8765/subscriptions/create
+Content-Type: application/json
+Authorization: Basic user222 user
+
+{
+  "Id": 0,
+  "title": "user-sub",
+  "identityId": 2
+}
+
+###
+@subscription-id = 1
+GET http://localhost:8765/subscriptions/{{subscription-id}}
+Content-Type: application/json
+Authorization: Basic admin admin
+
+###
+@identity-id = 1
+GET http://localhost:8765/subscriptions/identity/{{identity-id}}
+Content-Type: application/json
+Authorization: Basic admin admin

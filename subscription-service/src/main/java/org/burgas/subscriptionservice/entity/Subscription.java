@@ -9,6 +9,8 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -17,9 +19,15 @@ public class Subscription implements Persistable<Long> {
 
     @Id
     private Long id;
+    private String title;
 
     @Column("identity_id")
     private Long identityId;
+    private Boolean active;
+    private LocalDateTime created;
+    private LocalDateTime update;
+    private LocalDateTime ended;
+    private Boolean paid;
 
     @Transient
     private Boolean isNew;
