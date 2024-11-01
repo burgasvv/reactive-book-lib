@@ -1,4 +1,4 @@
-package org.burgas.subscriptionservice.entity;
+package org.burgas.bookservice.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,28 +9,25 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Subscription implements Persistable<Long> {
+public class Book implements Persistable<Long> {
 
     @Id
     private Long id;
     private String title;
+    private String description;
 
-    @Column("identity_id")
-    private Long identityId;
-    private Boolean active;
-    private LocalDateTime created;
-    private LocalDateTime updated;
-    private LocalDateTime ended;
-    private Boolean paid;
+    @Column("author_id")
+    private Long authorId;
+
+    @Column("genre_id")
+    private Long genreId;
 
     @Transient
-    private Boolean isNew;
+    public Boolean isNew;
 
     @Override
     public boolean isNew() {

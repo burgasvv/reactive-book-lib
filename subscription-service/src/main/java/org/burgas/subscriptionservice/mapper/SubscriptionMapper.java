@@ -40,9 +40,9 @@ public class SubscriptionMapper {
             return Subscription.builder()
                     .id(subscriptionRequest.getId())
                     .title(subscriptionRequest.getTitle())
-                    .identityId(subscriptionRequest.getIdentityId())
+                    .identityId(subscription.getIdentityId())
                     .created(subscription.getCreated())
-                    .update(subscription.getUpdate())
+                    .updated(subscription.getUpdated())
                     .active(subscription.getActive())
                     .paid(subscription.getPaid())
                     .isNew(false)
@@ -56,7 +56,7 @@ public class SubscriptionMapper {
     public SubscriptionResponse toSubscriptionResponse(Subscription subscription, String authorizeValue) {
         try {
             LocalDateTime created = subscription.getCreated();
-            LocalDateTime update = subscription.getUpdate();
+            LocalDateTime updated = subscription.getUpdated();
             LocalDateTime ended = subscription.getEnded();
             return SubscriptionResponse.builder()
                     .id(subscription.getId())
@@ -64,7 +64,7 @@ public class SubscriptionMapper {
                     .active(subscription.getActive())
                     .paid(subscription.getPaid())
                     .created(created != null ? created.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
-                    .updated(update != null ? update.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
+                    .updated(updated != null ? updated.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
                     .ended(ended != null ? ended.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
                     .identityResponse(
                             webClientHandler.getIdentityById(subscription.getIdentityId(), authorizeValue).toFuture().get()

@@ -10,12 +10,14 @@
         <module name="gateway-server" />
         <module name="discovery-server" />
         <module name="subscription-service" />
+        <module name="book-service" />
         <module name="identity-service" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="book-service" options="-parameters" />
       <module name="discovery-server" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="identity-service" options="-parameters" />

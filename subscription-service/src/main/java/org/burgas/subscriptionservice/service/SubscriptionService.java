@@ -3,6 +3,7 @@ package org.burgas.subscriptionservice.service;
 import lombok.RequiredArgsConstructor;
 import org.burgas.subscriptionservice.dto.SubscriptionRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionResponse;
+import org.burgas.subscriptionservice.entity.Subscription;
 import org.burgas.subscriptionservice.handler.WebClientHandler;
 import org.burgas.subscriptionservice.mapper.SubscriptionMapper;
 import org.burgas.subscriptionservice.repository.SubscriptionRepository;
@@ -38,7 +39,7 @@ public class SubscriptionService {
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,
-            rollbackFor = RuntimeException.class
+            rollbackFor = Exception.class
     )
     public Mono<SubscriptionResponse> create(Mono<SubscriptionRequest> subscriptionRequestMono, String authorizeValue) {
         return subscriptionRequestMono.flatMap(
@@ -49,11 +50,43 @@ public class SubscriptionService {
                                         Objects.equals(
                                                 identityPrincipal.getId(), subscriptionRequest.getIdentityId())
                                     ) {
-                                        return subscriptionRepository.save(
-                                                        subscriptionMapper.toSubscriptionCreate(subscriptionRequest)
-                                                )
-                                                .map(subscription -> subscriptionMapper
-                                                        .toSubscriptionResponse(subscription, authorizeValue)
+                                        Subscription create = subscriptionMapper.toSubscriptionCreate(subscriptionRequest);
+                                        return subscriptionRepository.save(create)
+                                                .map(
+                                                        subscription -> subscriptionMapper
+                                                                .toSubscriptionResponse(subscription, authorizeValue)
+                                                );
+
+                                    } else
+                                        return Mono.error(
+                                                new RuntimeException(
+                                                        "Пользователь не авторизован " +
+                                                        "или пытается создать абонемент с чужого аккаунта")
+                                        );
+                                }
+                        )
+        );
+    }
+
+    @Transactional(
+            isolation = SERIALIZABLE,
+            propagation = REQUIRED,
+            rollbackFor = Exception.class
+    )
+    public Mono<SubscriptionResponse> update(Mono<SubscriptionRequest> subscriptionRequestMono, String authorizeValue) {
+        return subscriptionRequestMono.flatMap(
+                subscriptionRequest -> webClientHandler.getPrincipal(authorizeValue)
+                        .flatMap(
+                                identityPrincipal -> {
+                                    if (identityPrincipal.getIsAuthenticated() &&
+                                        Objects.equals(
+                                                identityPrincipal.getId(), subscriptionRequest.getIdentityId())
+                                    ) {
+                                        Subscription create = subscriptionMapper.toSubscriptionUpdate(subscriptionRequest);
+                                        return subscriptionRepository.save(create)
+                                                .map(
+                                                        subscription -> subscriptionMapper
+                                                                .toSubscriptionResponse(subscription, authorizeValue)
                                                 );
 
                                     } else

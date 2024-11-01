@@ -60,11 +60,22 @@ Authorization: Basic user user
 ###
 POST http://localhost:8765/subscriptions/create
 Content-Type: application/json
-Authorization: Basic user222 user
+Authorization: Basic user user
 
 {
   "Id": 0,
   "title": "user-sub",
+  "identityId": 2
+}
+
+###
+PUT http://localhost:8765/subscriptions/edit
+Content-Type: application/json
+Authorization: Basic user user
+
+{
+  "id": 2,
+  "title": "user-subscription",
   "identityId": 2
 }
 

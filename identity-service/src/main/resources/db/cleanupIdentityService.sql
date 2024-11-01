@@ -1,2 +1,2 @@
 
-drop table if exists subscription, identity, authority;
+drop table if exists subscription_book, subscription, identity, authority;

@@ -38,4 +38,12 @@ public class SubscriptionRouter {
                 subscriptionWebHandler::handleCreateSubscription
         );
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> updateSubscription() {
+        return RouterFunctions.route(
+                RequestPredicates.PUT("/subscriptions/edit"),
+                subscriptionWebHandler::handleUpdateSubscription
+        );
+    }
 }
