@@ -1,5 +1,8 @@
 
-drop table if exists subscription_book,subscription, book, genre, author, identity, authority;
+drop table if exists payment, payment_type, subscription_book, subscription,
+    book, genre, author, identity, authority;
+
+
 
 
 create table if not exists authority(
@@ -69,6 +72,22 @@ create table if not exists subscription_book (
 
 
 
+create table if not exists payment_type(
+    id serial primary key ,
+    name varchar not null
+);
+
+create table if not exists payment (
+    id serial primary key ,
+    payment_type_id serial references payment_type(id)
+        on UPDATE cascade on DELETE cascade ,
+    subscription_id serial references subscription(id)
+        on UPDATE cascade on DELETE cascade
+);
+
+
+
+
 insert into authority(name) values ('USER');
 insert into authority(name) values ('ADMIN');
 
@@ -116,3 +135,8 @@ VALUES ('admin-sub', true, '2004-10-19 10:23:54', true, 1);
 
 insert into subscription_book(subscription_id, book_id)
 values (1, 1);
+
+insert into payment_type(name) values ('Наличные');
+insert into payment_type(name) values ('Карта');
+
+insert into payment(payment_type_id, subscription_id) values (2, 1);
