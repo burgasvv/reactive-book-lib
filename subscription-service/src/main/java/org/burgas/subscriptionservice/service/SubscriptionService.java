@@ -99,4 +99,33 @@ public class SubscriptionService {
                         )
         );
     }
+
+    @Transactional(
+            isolation = SERIALIZABLE,
+            propagation = REQUIRED,
+            rollbackFor = Exception.class
+    )
+    public Mono<String> addBookToSubscription(
+            Mono<SubscriptionRequest> requestMono, String bookId, String authorizeValue
+    ) {
+        return requestMono.flatMap(
+                subscriptionRequest -> webClientHandler.getPrincipal(authorizeValue)
+                        .flatMap(
+                                identityPrincipal -> {
+                                    if (identityPrincipal.getIsAuthenticated() &&
+                                        Objects.equals(identityPrincipal.getId(), subscriptionRequest.getIdentityId())
+                                    ) {
+                                        return subscriptionRepository
+                                                .addBookToSubscription(subscriptionRequest.getId(), Long.valueOf(bookId))
+                                                .then(
+                                                        Mono.fromCallable(() -> "Книга успешно добавлена в абонемент")
+                                                );
+                                    } else
+                                        return Mono.error(
+                                                new RuntimeException("Пользователь не авторизован или хитрит")
+                                        );
+                                }
+                        )
+        );
+    }
 }

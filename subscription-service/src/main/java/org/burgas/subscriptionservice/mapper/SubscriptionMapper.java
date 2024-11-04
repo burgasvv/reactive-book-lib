@@ -69,6 +69,10 @@ public class SubscriptionMapper {
                     .identityResponse(
                             webClientHandler.getIdentityById(subscription.getIdentityId(), authorizeValue).toFuture().get()
                     )
+                    .bookResponses(
+                            webClientHandler.getBooksBySubscriptionId(subscription.getId(), authorizeValue)
+                                    .collectList().toFuture().get()
+                    )
                     .build();
 
         } catch (InterruptedException | ExecutionException e) {

@@ -17,7 +17,6 @@ public class Genre implements Persistable<Long> {
     @Id
     private Long id;
     private String name;
-    private String description;
 
     @Transient
     public Boolean isNew;

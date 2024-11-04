@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Column;
-
-import java.sql.Date;
 
 @Data
 @Builder
@@ -22,13 +19,6 @@ public class Author implements Persistable<Long> {
     private String firstname;
     private String lastname;
     private String patronymic;
-    private String biography;
-
-    @Column("birth_date")
-    private Date birthdate;
-
-    @Column("death_date")
-    private Date deathdate;
 
     @Transient
     public Boolean isNew;

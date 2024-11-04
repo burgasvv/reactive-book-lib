@@ -2,10 +2,13 @@ package org.burgas.subscriptionservice.handler;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.burgas.subscriptionservice.dto.BookResponse;
 import org.burgas.subscriptionservice.dto.IdentityPrincipal;
 import org.burgas.subscriptionservice.dto.IdentityResponse;
+import org.burgas.subscriptionservice.dto.SubscriptionResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
@@ -66,5 +69,21 @@ public class WebClientHandler {
     @SuppressWarnings("unused")
     private Mono<IdentityResponse> fallBackGetIdentityById(Throwable throwable) {
         return Mono.just(IdentityResponse.builder().build());
+    }
+
+    @CircuitBreaker(
+            name = "getBooksBySubscriptionId",
+            fallbackMethod = "fallBackGetBooksBySubscriptionId"
+    )
+    public Flux<BookResponse> getBooksBySubscriptionId(Long subscriptionId, String authValue) {
+        return webClient.get()
+                .uri("http://localhost:9010/books/subscription/" + subscriptionId)
+                .retrieve()
+                .bodyToFlux(BookResponse.class);
+    }
+
+    @SuppressWarnings("unused")
+    public Mono<SubscriptionResponse> fallBackGetBooksBySubscriptionId(Throwable throwable) {
+        return Mono.just(SubscriptionResponse.builder().build());
     }
 }

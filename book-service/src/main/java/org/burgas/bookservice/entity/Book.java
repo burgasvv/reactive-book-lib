@@ -18,6 +18,7 @@ public class Book implements Persistable<Long> {
     @Id
     private Long id;
     private String title;
+    private Long pages;
     private String description;
 
     @Column("author_id")

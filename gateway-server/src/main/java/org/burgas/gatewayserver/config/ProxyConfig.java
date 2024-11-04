@@ -18,6 +18,12 @@ public class ProxyConfig {
                                 .uri("lb://identity-service")
                 )
                 .route(
+                        "books",
+                        predicateSpec -> predicateSpec
+                                .path("/genres/**", "/authors/**", "/books/**")
+                                .uri("lb://book-service")
+                )
+                .route(
                         "subscriptions",
                         predicateSpec -> predicateSpec
                                 .path("/subscriptions/**")

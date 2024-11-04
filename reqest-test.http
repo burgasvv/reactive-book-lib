@@ -90,3 +90,51 @@ Authorization: Basic admin admin
 GET http://localhost:8765/subscriptions/identity/{{identity-id}}
 Content-Type: application/json
 Authorization: Basic admin admin
+
+###
+POST http://localhost:8765/subscriptions/add-book?bookId=2
+Content-Type: application/json
+Authorization: Basic admin admin
+
+{
+  "id": 1,
+  "title": "admin-sub",
+  "identityId": 1
+}
+
+###
+@author-id = 1
+GET http://localhost:8765/books/by-author/{{author-id}}
+Content-Type: application/json
+
+###
+@genre-id = 1
+GET http://localhost:8765/books/by-genre/{{genre-id}}
+Content-Type: application/json
+
+###
+GET http://localhost:8765/genres
+Content-Type: application/json
+
+###
+GET http://localhost:8765/genres/{{genre-id}}
+Content-Type: application/json
+
+###
+POST http://localhost:8765/genres/create
+Content-Type: application/json
+
+{
+  "id": 0,
+  "name": "Фантастика"
+}
+
+###
+PUT http://localhost:8765/genres/edit
+Content-Type: application/json
+Authorization: Basic admin admin
+
+{
+  "id": 2,
+  "name": "Детектив"
+}

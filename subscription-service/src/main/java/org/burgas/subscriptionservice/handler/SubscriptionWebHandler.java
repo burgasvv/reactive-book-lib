@@ -48,4 +48,15 @@ public class SubscriptionWebHandler {
                 SubscriptionResponse.class
         );
     }
+
+    public Mono<ServerResponse> handleAddBookToSubscription(ServerRequest request) {
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
+        return ServerResponse.ok().body(
+                subscriptionService.addBookToSubscription(
+                        request.bodyToMono(SubscriptionRequest.class),
+                        request.queryParam("bookId").orElse(null), authValue
+                ),
+                String.class
+        );
+    }
 }

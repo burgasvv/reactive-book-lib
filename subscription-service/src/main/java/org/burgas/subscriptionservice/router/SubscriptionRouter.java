@@ -46,4 +46,12 @@ public class SubscriptionRouter {
                 subscriptionWebHandler::handleUpdateSubscription
         );
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> addBookToSubscription() {
+        return RouterFunctions.route(
+                RequestPredicates.POST("/subscriptions/add-book"),
+                subscriptionWebHandler::handleAddBookToSubscription
+        );
+    }
 }

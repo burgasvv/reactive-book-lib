@@ -30,14 +30,21 @@ public class SecurityConfig {
                 .authorizeExchange(
                         exchange -> exchange
 
-                                .pathMatchers("/identities/create", "/auth/principal")
+                                .pathMatchers(
+                                        "/identities/create", "/auth/principal",
+                                        "/books","/books/by-author/{author-id}","/books/by-genre/{genre-id}",
+                                        "/books/subscription/{subscription-id}", "/authors","/authors/{author-id}",
+                                         "/genres","/genres/{genre-id}"
+                                )
                                 .permitAll()
 
                                 .pathMatchers("/auth/principal",
                                         "/identities","/identities/{username}",
                                         "/identities/identity/{identity-id}",
                                         "/identities/edit","/identities/delete",
-                                        "/authorities/**", "/subscriptions/**"
+                                        "/authorities/**", "/subscriptions/**",
+                                        "/books/create", "/books/edit", "/genres/create","/genres/edit",
+                                        "/authors/create", "/authors/edit"
                                 )
                                 .hasAnyAuthority("USER", "ADMIN")
                 )
