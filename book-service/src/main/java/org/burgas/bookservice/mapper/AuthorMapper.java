@@ -6,6 +6,8 @@ import org.burgas.bookservice.dto.AuthorResponse;
 import org.burgas.bookservice.entity.Author;
 import org.burgas.bookservice.repository.AuthorRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.concurrent.ExecutionException;
 
@@ -15,26 +17,39 @@ public class AuthorMapper {
 
     private final AuthorRepository authorRepository;
 
-    public Author toAuthor(AuthorRequest authorRequest) {
-        try {
-            return Author.builder()
-                    .id(authorRequest.getId())
-                    .firstname(authorRequest.getFirstname())
-                    .lastname(authorRequest.getLastname())
-                    .patronymic(authorRequest.getPatronymic())
-                    .isNew(authorRepository.findById(authorRequest.getId()).toFuture().get() == null)
-                    .build();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+    public Mono<Author> toAuthor(Mono<AuthorRequest> authorRequestMono) {
+        return authorRequestMono
+                .publishOn(Schedulers.boundedElastic())
+                .handle(
+                        (authorRequest, authorSynchronousSink) ->
+                        {
+                            try {
+                                Long tempId = authorRequest.getId() == null ? 0L : authorRequest.getId();
+                                authorSynchronousSink.next(
+                                        Author.builder()
+                                                .id(authorRequest.getId())
+                                                .firstname(authorRequest.getFirstname())
+                                                .lastname(authorRequest.getLastname())
+                                                .patronymic(authorRequest.getPatronymic())
+                                                .isNew(authorRepository.findById(tempId).toFuture().get() == null)
+                                                .build()
+                                );
+                            } catch (InterruptedException | ExecutionException e) {
+                                authorSynchronousSink.error(new RuntimeException(e));
+                            }
+                        }
+                );
     }
 
-    public AuthorResponse toAuthorResponse(Author author) {
-        return AuthorResponse.builder()
-                .id(author.getId())
-                .firstname(author.getFirstname())
-                .lastname(author.getLastname())
-                .patronymic(author.getPatronymic())
-                .build();
+    public Mono<AuthorResponse> toAuthorResponse(Mono<Author> authorMono) {
+        return authorMono
+                .map(
+                        author -> AuthorResponse.builder()
+                                .id(author.getId())
+                                .firstname(author.getFirstname())
+                                .lastname(author.getLastname())
+                                .patronymic(author.getPatronymic())
+                                .build()
+                );
     }
 }

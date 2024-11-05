@@ -44,7 +44,7 @@ public class SubscriptionWebHandler {
     public Mono<ServerResponse> handleUpdateSubscription(ServerRequest request) {
         String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                subscriptionService.update(request.bodyToMono(SubscriptionRequest.class), authValue),
+                subscriptionService.updateAfterPayment(request.bodyToMono(SubscriptionRequest.class), authValue),
                 SubscriptionResponse.class
         );
     }

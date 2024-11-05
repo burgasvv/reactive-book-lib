@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 
 @Configuration
 @RequiredArgsConstructor
-public class AuthorityRouter {
+public class AuthorityWebRouter {
 
     private final AuthorityWebHandler authorityWebHandler;
 

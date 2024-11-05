@@ -10,6 +10,7 @@
         <module name="gateway-server" />
         <module name="discovery-server" />
         <module name="subscription-service" />
+        <module name="payment-service" />
         <module name="book-service" />
         <module name="identity-service" />
       </profile>
@@ -21,6 +22,7 @@
       <module name="discovery-server" options="-parameters" />
       <module name="gateway-server" options="-parameters" />
       <module name="identity-service" options="-parameters" />
+      <module name="payment-service" options="-parameters" />
       <module name="subscription-service" options="-parameters" />
     </option>
   </component>

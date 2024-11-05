@@ -3,7 +3,6 @@ package org.burgas.subscriptionservice.service;
 import lombok.RequiredArgsConstructor;
 import org.burgas.subscriptionservice.dto.SubscriptionRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionResponse;
-import org.burgas.subscriptionservice.entity.Subscription;
 import org.burgas.subscriptionservice.handler.WebClientHandler;
 import org.burgas.subscriptionservice.mapper.SubscriptionMapper;
 import org.burgas.subscriptionservice.repository.SubscriptionRepository;
@@ -28,12 +27,16 @@ public class SubscriptionService {
 
     public Flux<SubscriptionResponse> findByIdentityId(String identityId, String authorizeValue) {
         return subscriptionRepository.findSubscriptionsByIdentityId(Long.valueOf(identityId))
-                .map(subscription -> subscriptionMapper.toSubscriptionResponse(subscription, authorizeValue));
+                .flatMap(
+                        subscription -> subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue)
+                );
     }
 
     public Mono<SubscriptionResponse> findById(String subscriptionId, String authorizeValue) {
         return subscriptionRepository.findById(Long.valueOf(subscriptionId))
-                .map(subscription -> subscriptionMapper.toSubscriptionResponse(subscription, authorizeValue));
+                .flatMap(
+                        subscription -> subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue)
+                );
     }
 
     @Transactional(
@@ -50,13 +53,14 @@ public class SubscriptionService {
                                         Objects.equals(
                                                 identityPrincipal.getId(), subscriptionRequest.getIdentityId())
                                     ) {
-                                        Subscription create = subscriptionMapper.toSubscriptionCreate(subscriptionRequest);
-                                        return subscriptionRepository.save(create)
-                                                .map(
+                                        return subscriptionMapper.toSubscriptionCreate(Mono.just(subscriptionRequest))
+                                                .flatMap(subscriptionRepository::save)
+                                                .flatMap(
                                                         subscription -> subscriptionMapper
-                                                                .toSubscriptionResponse(subscription, authorizeValue)
+                                                                .toSubscriptionResponse(
+                                                                        Mono.just(subscription), authorizeValue
+                                                                )
                                                 );
-
                                     } else
                                         return Mono.error(
                                                 new RuntimeException(
@@ -73,7 +77,7 @@ public class SubscriptionService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<SubscriptionResponse> update(Mono<SubscriptionRequest> subscriptionRequestMono, String authorizeValue) {
+    public Mono<SubscriptionResponse> updateAfterPayment(Mono<SubscriptionRequest> subscriptionRequestMono, String authorizeValue) {
         return subscriptionRequestMono.flatMap(
                 subscriptionRequest -> webClientHandler.getPrincipal(authorizeValue)
                         .flatMap(
@@ -82,11 +86,13 @@ public class SubscriptionService {
                                         Objects.equals(
                                                 identityPrincipal.getId(), subscriptionRequest.getIdentityId())
                                     ) {
-                                        Subscription create = subscriptionMapper.toSubscriptionUpdate(subscriptionRequest);
-                                        return subscriptionRepository.save(create)
-                                                .map(
+                                        return subscriptionMapper.toSubscriptionUpdate(Mono.just(subscriptionRequest))
+                                                .flatMap(subscriptionRepository::save)
+                                                .flatMap(
                                                         subscription -> subscriptionMapper
-                                                                .toSubscriptionResponse(subscription, authorizeValue)
+                                                                .toSubscriptionResponse(
+                                                                        Mono.just(subscription), authorizeValue
+                                                                )
                                                 );
 
                                     } else

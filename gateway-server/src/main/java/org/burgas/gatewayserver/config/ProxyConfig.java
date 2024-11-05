@@ -29,6 +29,12 @@ public class ProxyConfig {
                                 .path("/subscriptions/**")
                                 .uri("lb://subscription-service")
                 )
+                .route(
+                        "payments",
+                        predicateSpec -> predicateSpec
+                                .path("/payment-types/**", "/payments/**")
+                                .uri("lb://payment-service")
+                )
                 .build();
     }
 }

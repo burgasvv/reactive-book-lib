@@ -34,7 +34,7 @@ public class SecurityConfig {
                                         "/identities/create", "/auth/principal",
                                         "/books","/books/by-author/{author-id}","/books/by-genre/{genre-id}",
                                         "/books/subscription/{subscription-id}", "/authors","/authors/{author-id}",
-                                         "/genres","/genres/{genre-id}"
+                                         "/genres","/genres/{genre-id}", "/payment-types", "/payment-types/{paymentType-id}"
                                 )
                                 .permitAll()
 
@@ -44,7 +44,7 @@ public class SecurityConfig {
                                         "/identities/edit","/identities/delete",
                                         "/authorities/**", "/subscriptions/**",
                                         "/books/create", "/books/edit", "/genres/create","/genres/edit",
-                                        "/authors/create", "/authors/edit"
+                                        "/authors/create", "/authors/edit", "/payment-types/**"
                                 )
                                 .hasAnyAuthority("USER", "ADMIN")
                 )

@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class GenreWebHandler {
@@ -26,8 +28,10 @@ public class GenreWebHandler {
     }
 
     public Mono<ServerResponse> handleCreateOrUpdate(ServerRequest request) {
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                genreService.createOrUpdate(request.bodyToMono(GenreRequest.class)), GenreResponse.class
+                genreService.createOrUpdate(request.bodyToMono(GenreRequest.class), authValue),
+                GenreResponse.class
         );
     }
 }

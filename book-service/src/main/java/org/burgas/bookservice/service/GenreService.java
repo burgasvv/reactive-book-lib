@@ -3,13 +3,15 @@ package org.burgas.bookservice.service;
 import lombok.RequiredArgsConstructor;
 import org.burgas.bookservice.dto.GenreRequest;
 import org.burgas.bookservice.dto.GenreResponse;
-import org.burgas.bookservice.entity.Genre;
+import org.burgas.bookservice.handler.WebClientHandler;
 import org.burgas.bookservice.mapper.GenreMapper;
 import org.burgas.bookservice.repository.GenreRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
@@ -21,13 +23,15 @@ public class GenreService {
 
     private final GenreRepository genreRepository;
     private final GenreMapper genreMapper;
+    private final WebClientHandler webClientHandler;
 
     public Flux<GenreResponse> findAll() {
-        return genreRepository.findAll().map(genreMapper::toGenreResponse);
+        return genreRepository.findAll().flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
     }
 
     public Mono<GenreResponse> findById(String genreId) {
-        return genreRepository.findById(Long.valueOf(genreId)).map(genreMapper::toGenreResponse);
+        return genreRepository.findById(Long.valueOf(genreId))
+                .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
     }
 
     @Transactional(
@@ -35,12 +39,24 @@ public class GenreService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<GenreResponse> createOrUpdate(Mono<GenreRequest> genreRequestMono) {
+    public Mono<GenreResponse> createOrUpdate(Mono<GenreRequest> genreRequestMono, String authValue) {
         return genreRequestMono.flatMap(
-                genreRequest -> {
-                    Genre genre = genreMapper.toGenre(genreRequest);
-                    return genreRepository.save(genre).map(genreMapper::toGenreResponse);
-                }
+                genreRequest -> webClientHandler.getPrincipal(authValue)
+                        .flatMap(
+                                identityPrincipal -> {
+                                    if (
+                                            identityPrincipal.getIsAuthenticated() &&
+                                            Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                                    ) {
+                                        return genreMapper.toGenre(Mono.just(genreRequest))
+                                                .flatMap(genreRepository::save)
+                                                .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
+                                    } else
+                                        return Mono.error(
+                                                new RuntimeException("Пользователь не авторизован или не имеет прав доступа")
+                                        );
+                                }
+                        )
         );
     }
 }

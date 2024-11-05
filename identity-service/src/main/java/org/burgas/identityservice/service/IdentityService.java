@@ -3,7 +3,6 @@ package org.burgas.identityservice.service;
 import lombok.RequiredArgsConstructor;
 import org.burgas.identityservice.dto.IdentityRequest;
 import org.burgas.identityservice.dto.IdentityResponse;
-import org.burgas.identityservice.entity.Identity;
 import org.burgas.identityservice.exception.IdentityWrongIssuesException;
 import org.burgas.identityservice.handler.WebClientHandler;
 import org.burgas.identityservice.mapper.IdentityMapper;
@@ -29,17 +28,17 @@ public class IdentityService {
 
     public Flux<IdentityResponse> findAll() {
         return identityRepository.findAll()
-                .map(identityMapper::toIdentityResponse);
+                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)));
     }
 
     public Mono<IdentityResponse> findByUsername(String username) {
         return identityRepository.findIdentityByUsername(username)
-                .map(identityMapper::toIdentityResponse);
+                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)));
     }
 
     public Mono<IdentityResponse> findById(String identityId) {
         return identityRepository.findById(Long.valueOf(identityId))
-                .map(identityMapper::toIdentityResponse);
+                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)));
     }
 
     @Transactional(
@@ -51,11 +50,10 @@ public class IdentityService {
     )
     public Mono<String> create(Mono<IdentityRequest> identityRequestMono) {
         return identityRequestMono.flatMap(
-                identityRequest -> {
-                    Identity create = identityMapper.toIdentityCreate(identityRequest);
-                    return identityRepository.save(create)
-                            .map(identity -> "Пользователь с именем " + identity.getUsername() + " успешно создан");
-                }
+                identityRequest ->
+                    identityMapper.toIdentityCreate(Mono.just(identityRequest))
+                            .flatMap(identityRepository::save)
+                            .map(identity -> "Пользователь с именем " + identity.getUsername() + " успешно создан")
         );
     }
 
@@ -75,11 +73,9 @@ public class IdentityService {
                                     if (identityPrincipal.getIsAuthenticated() &&
                                         Objects.equals(identityPrincipal.getId(), identityRequest.getId())
                                     ) {
-
-                                        Identity update = identityMapper.toIdentityUpdate(identityRequest);
-                                        return identityRepository.save(update)
-                                                .map(identityMapper::toIdentityResponse);
-
+                                        return identityMapper.toIdentityUpdate(Mono.just(identityRequest))
+                                                .flatMap(identityRepository::save)
+                                                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)));
                                     } else
                                         return Mono.error(
                                                 new IdentityWrongIssuesException("Пользователь не авторизован или жулик")
