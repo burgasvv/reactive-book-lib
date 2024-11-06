@@ -77,7 +77,7 @@ public class WebClientHandler {
     )
     public Flux<BookResponse> getBooksBySubscriptionId(Long subscriptionId, String authValue) {
         return webClient.get()
-                .uri("http://localhost:9010/books/subscription/" + subscriptionId)
+                .uri("http://localhost:9000/books/subscription/" + subscriptionId)
                 .header(AUTHORIZATION, authValue)
                 .retrieve()
                 .bodyToFlux(BookResponse.class);

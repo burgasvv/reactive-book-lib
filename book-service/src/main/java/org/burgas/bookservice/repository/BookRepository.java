@@ -11,7 +11,7 @@ public interface BookRepository extends ReactiveCrudRepository<Book, Long> {
 
     @Query(
             value = """
-                    select * from book join subscription_book sb on book.id = sb.book_id
+                    select distinct * from book join subscription_book sb on book.id = sb.book_id
                     where sb.subscription_id = :subscription_id
                     """
     )

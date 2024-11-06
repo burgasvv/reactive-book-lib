@@ -221,3 +221,25 @@ Authorization: Basic admin admin
   "id": 3,
   "name": "World"
 }
+
+###
+GET http://localhost:8765/payments
+Content-Type: application/json
+Authorization: Basic admin admin
+
+###
+@payment-id = 1
+GET http://localhost:8765/payments/{{payment-id}}
+Content-Type: application/json
+Authorization: Basic admin admin
+
+###
+POST http://localhost:8765/payments/make-payment
+Content-Type: application/json
+Authorization: Basic user user
+
+{
+  "identityId": 2,
+  "paymentTypeId": 2,
+  "subscriptionId": 2
+}

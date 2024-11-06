@@ -12,7 +12,7 @@ public interface SubscriptionRepository extends ReactiveCrudRepository<Subscript
 
     @Query(
             value = """
-                    select * from subscription where identity_id = :identityId
+                    select distinct * from subscription where identity_id = :identityId
                     """
     )
     Flux<Subscription> findSubscriptionsByIdentityId(Long identityId);

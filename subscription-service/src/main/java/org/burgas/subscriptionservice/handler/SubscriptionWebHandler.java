@@ -1,6 +1,7 @@
 package org.burgas.subscriptionservice.handler;
 
 import lombok.RequiredArgsConstructor;
+import org.burgas.subscriptionservice.dto.PaymentRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionResponse;
 import org.burgas.subscriptionservice.service.SubscriptionService;
@@ -44,7 +45,7 @@ public class SubscriptionWebHandler {
     public Mono<ServerResponse> handleUpdateSubscription(ServerRequest request) {
         String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                subscriptionService.updateAfterPayment(request.bodyToMono(SubscriptionRequest.class), authValue),
+                subscriptionService.updateAfterPayment(request.bodyToMono(PaymentRequest.class), authValue),
                 SubscriptionResponse.class
         );
     }

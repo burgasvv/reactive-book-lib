@@ -44,7 +44,7 @@ public class SecurityConfig {
                                         "/identities/edit","/identities/delete",
                                         "/authorities/**", "/subscriptions/**",
                                         "/books/create", "/books/edit", "/genres/create","/genres/edit",
-                                        "/authors/create", "/authors/edit", "/payment-types/**"
+                                        "/authors/create", "/authors/edit", "/payment-types/**", "/payments/**"
                                 )
                                 .hasAnyAuthority("USER", "ADMIN")
                 )

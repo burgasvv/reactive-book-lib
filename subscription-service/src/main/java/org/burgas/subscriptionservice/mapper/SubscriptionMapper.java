@@ -1,6 +1,7 @@
 package org.burgas.subscriptionservice.mapper;
 
 import lombok.RequiredArgsConstructor;
+import org.burgas.subscriptionservice.dto.PaymentRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionResponse;
 import org.burgas.subscriptionservice.entity.Subscription;
@@ -38,23 +39,23 @@ public class SubscriptionMapper {
                 );
     }
 
-    public Mono<Subscription> toSubscriptionUpdate(Mono<SubscriptionRequest> subscriptionRequestMono) {
-        return subscriptionRequestMono
+    public Mono<Subscription> toSubscriptionUpdate(Mono<PaymentRequest> paymentRequestMono) {
+        return paymentRequestMono
                 .publishOn(Schedulers.boundedElastic())
                 .handle(
-                        (subscriptionRequest, subscriptionSynchronousSink) ->
+                        (paymentRequest, subscriptionSynchronousSink) ->
                         {
                             try {
                                 Subscription subscription = subscriptionRepository
-                                        .findById(subscriptionRequest.getId()).toFuture().get();
+                                        .findById(paymentRequest.getSubscriptionId()).toFuture().get();
                                 subscriptionSynchronousSink.next(
                                         Subscription.builder()
-                                                .id(subscriptionRequest.getId())
-                                                .title(subscriptionRequest.getTitle())
+                                                .id(paymentRequest.getSubscriptionId())
+                                                .title(subscription.getTitle())
                                                 .identityId(subscription.getIdentityId())
                                                 .created(subscription.getCreated())
                                                 .updated(LocalDateTime.now())
-                                                .active(subscription.getActive())
+                                                .active(true)
                                                 .paid(true)
                                                 .isNew(false)
                                                 .build()

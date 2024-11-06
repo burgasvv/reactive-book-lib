@@ -1,6 +1,7 @@
 package org.burgas.subscriptionservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.burgas.subscriptionservice.dto.PaymentRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionResponse;
 import org.burgas.subscriptionservice.handler.WebClientHandler;
@@ -77,16 +78,16 @@ public class SubscriptionService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<SubscriptionResponse> updateAfterPayment(Mono<SubscriptionRequest> subscriptionRequestMono, String authorizeValue) {
-        return subscriptionRequestMono.flatMap(
-                subscriptionRequest -> webClientHandler.getPrincipal(authorizeValue)
+    public Mono<SubscriptionResponse> updateAfterPayment(Mono<PaymentRequest> paymentRequestMono, String authorizeValue) {
+        return paymentRequestMono.flatMap(
+                paymentRequest -> webClientHandler.getPrincipal(authorizeValue)
                         .flatMap(
                                 identityPrincipal -> {
                                     if (identityPrincipal.getIsAuthenticated() &&
                                         Objects.equals(
-                                                identityPrincipal.getId(), subscriptionRequest.getIdentityId())
+                                                identityPrincipal.getId(), paymentRequest.getIdentityId())
                                     ) {
-                                        return subscriptionMapper.toSubscriptionUpdate(Mono.just(subscriptionRequest))
+                                        return subscriptionMapper.toSubscriptionUpdate(Mono.just(paymentRequest))
                                                 .flatMap(subscriptionRepository::save)
                                                 .flatMap(
                                                         subscription -> subscriptionMapper
