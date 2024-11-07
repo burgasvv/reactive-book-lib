@@ -31,14 +31,14 @@ public class SecurityConfig {
                         exchange -> exchange
 
                                 .pathMatchers(
-                                        "/identities/create", "/auth/principal",
+                                        "/identities/create", "/auth/principal","/books/{book-id}",
                                         "/books","/books/by-author/{author-id}","/books/by-genre/{genre-id}",
                                         "/books/subscription/{subscription-id}", "/authors","/authors/{author-id}",
                                          "/genres","/genres/{genre-id}", "/payment-types", "/payment-types/{paymentType-id}"
                                 )
                                 .permitAll()
 
-                                .pathMatchers("/auth/principal",
+                                .pathMatchers(
                                         "/identities","/identities/{username}",
                                         "/identities/identity/{identity-id}",
                                         "/identities/edit","/identities/delete",

@@ -183,17 +183,6 @@ Content-Type: application/json
 Authorization: Basic admin admin
 
 ###
-POST http://localhost:8765/subscriptions/add-book?bookId=2
-Content-Type: application/json
-Authorization: Basic admin admin
-
-{
-  "id": 1,
-  "title": "admin-sub",
-  "identityId": 1
-}
-
-###
 GET http://localhost:8765/payment-types
 Content-Type: application/json
 
@@ -242,4 +231,15 @@ Authorization: Basic user user
   "identityId": 2,
   "paymentTypeId": 2,
   "subscriptionId": 2
+}
+
+###
+POST http://localhost:8765/subscriptions/add-book?bookId=2
+Content-Type: application/json
+Authorization: Basic user user
+
+{
+  "id": 2,
+  "title": "user-sub",
+  "identityId": 2
 }

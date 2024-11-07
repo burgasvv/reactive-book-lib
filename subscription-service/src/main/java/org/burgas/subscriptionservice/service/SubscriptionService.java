@@ -1,9 +1,11 @@
 package org.burgas.subscriptionservice.service;
 
 import lombok.RequiredArgsConstructor;
+import org.burgas.subscriptionservice.dto.IdentityPrincipal;
 import org.burgas.subscriptionservice.dto.PaymentRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionRequest;
 import org.burgas.subscriptionservice.dto.SubscriptionResponse;
+import org.burgas.subscriptionservice.entity.Subscription;
 import org.burgas.subscriptionservice.handler.WebClientHandler;
 import org.burgas.subscriptionservice.mapper.SubscriptionMapper;
 import org.burgas.subscriptionservice.repository.SubscriptionRepository;
@@ -27,16 +29,46 @@ public class SubscriptionService {
     private final WebClientHandler webClientHandler;
 
     public Flux<SubscriptionResponse> findByIdentityId(String identityId, String authorizeValue) {
-        return subscriptionRepository.findSubscriptionsByIdentityId(Long.valueOf(identityId))
+        return Flux.zip(
+                subscriptionRepository.findSubscriptionsByIdentityId(Long.valueOf(identityId)),
+                webClientHandler.getPrincipal(authorizeValue)
+        )
                 .flatMap(
-                        subscription -> subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue)
+                        objects -> {
+                            Subscription subscription = objects.getT1();
+                            IdentityPrincipal identity = objects.getT2();
+                            if (
+                                    (identity.getIsAuthenticated() && Objects.equals(identity.getId(), subscription.getIdentityId())) ||
+                                    (identity.getIsAuthenticated() && Objects.equals(identity.getAuthorities().getFirst(), "ADMIN"))
+                            ) {
+                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue);
+                            } else
+                                return Mono.error(
+                                        new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
+                                );
+                        }
                 );
     }
 
     public Mono<SubscriptionResponse> findById(String subscriptionId, String authorizeValue) {
-        return subscriptionRepository.findById(Long.valueOf(subscriptionId))
+        Mono<Subscription> subscriptionMono = subscriptionRepository.findById(Long.valueOf(subscriptionId));
+        Mono<IdentityPrincipal> principalMono = webClientHandler.getPrincipal(authorizeValue);
+        return Mono.zip(subscriptionMono, principalMono)
                 .flatMap(
-                        subscription -> subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue)
+                        objects -> {
+                            Subscription subscription = objects.getT1();
+                            IdentityPrincipal principal = objects.getT2();
+                            if (
+                                    (principal.getIsAuthenticated() && Objects.equals(principal.getId(), subscription.getIdentityId()))
+                                    ||
+                                    (principal.getIsAuthenticated() && Objects.equals(principal.getAuthorities().getFirst(), "ADMIN"))
+                            ) {
+                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue);
+                            } else
+                                return Mono.error(
+                                        new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
+                                );
+                        }
                 );
     }
 
@@ -115,24 +147,32 @@ public class SubscriptionService {
     public Mono<String> addBookToSubscription(
             Mono<SubscriptionRequest> requestMono, String bookId, String authorizeValue
     ) {
-        return requestMono.flatMap(
-                subscriptionRequest -> webClientHandler.getPrincipal(authorizeValue)
-                        .flatMap(
-                                identityPrincipal -> {
-                                    if (identityPrincipal.getIsAuthenticated() &&
-                                        Objects.equals(identityPrincipal.getId(), subscriptionRequest.getIdentityId())
-                                    ) {
-                                        return subscriptionRepository
-                                                .addBookToSubscription(subscriptionRequest.getId(), Long.valueOf(bookId))
-                                                .then(
-                                                        Mono.fromCallable(() -> "Книга успешно добавлена в абонемент")
-                                                );
-                                    } else
-                                        return Mono.error(
-                                                new RuntimeException("Пользователь не авторизован или хитрит")
-                                        );
-                                }
-                        )
-        );
+        Mono<IdentityPrincipal> principal = webClientHandler.getPrincipal(authorizeValue);
+        return Mono.zip(requestMono, principal)
+                .flatMap(
+                        objects -> {
+                            SubscriptionRequest subscriptionRequest = objects.getT1();
+                            IdentityPrincipal identityPrincipal = objects.getT2();
+                            return subscriptionRepository.findById(subscriptionRequest.getId())
+                                    .flatMap(
+                                            subscription -> {
+                                                if (
+                                                        identityPrincipal.getIsAuthenticated() &&
+                                                        Objects.equals(identityPrincipal.getId(), subscriptionRequest.getIdentityId()) &&
+                                                        subscription.getActive() && subscription.getPaid()
+                                                ) {
+                                                    return subscriptionRepository
+                                                            .addBookToSubscription(subscriptionRequest.getId(), Long.valueOf(bookId))
+                                                            .then(
+                                                                    Mono.fromCallable(() -> "Книга успешно добавлена в абонемент")
+                                                            );
+                                                } else
+                                                    return Mono.error(
+                                                            new RuntimeException("Пользователь не авторизован")
+                                                    );
+                                            }
+                                    );
+                        }
+                );
     }
 }

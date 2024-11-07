@@ -85,9 +85,9 @@ public class SubscriptionMapper {
                                                 .title(subscription.getTitle())
                                                 .active(subscription.getActive())
                                                 .paid(subscription.getPaid())
-                                                .created(created != null ? created.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
-                                                .updated(updated != null ? updated.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
-                                                .ended(ended != null ? ended.format(ofPattern("yyyy-MM-dd HH:mm:ss")) : null)
+                                                .created(created != null ? format(created) : null)
+                                                .updated(updated != null ? format(updated) : null)
+                                                .ended(ended != null ? format(ended) : null)
                                                 .identityResponse(
                                                         webClientHandler.getIdentityById(subscription.getIdentityId(), authorizeValue)
                                                                 .toFuture().get()
@@ -104,5 +104,9 @@ public class SubscriptionMapper {
                             }
                         }
                 );
+    }
+
+    private String format(LocalDateTime localDateTime) {
+        return localDateTime.format(ofPattern("dd.MM.yyyy HH:mm:ss"));
     }
 }
