@@ -65,12 +65,12 @@ public class IdentityService {
                     Exception.class
             }
     )
-    public Mono<IdentityResponse> update(Mono<IdentityRequest> identityRequestMono) {
+    public Mono<IdentityResponse> update(Mono<IdentityRequest> identityRequestMono, String authValue) {
         return identityRequestMono.flatMap(
-                identityRequest -> webClientHandler.getPrincipal()
+                identityRequest -> webClientHandler.getPrincipal(authValue)
                         .flatMap(
                                 identityPrincipal -> {
-
+                                    System.out.println(identityPrincipal);
                                     if (identityPrincipal.getIsAuthenticated() &&
                                         Objects.equals(identityPrincipal.getId(), identityRequest.getId())
                                     ) {
@@ -79,7 +79,7 @@ public class IdentityService {
                                                 .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)));
                                     } else
                                         return Mono.error(
-                                                new IdentityWrongIssuesException("Пользователь не авторизован или жулик")
+                                                new IdentityWrongIssuesException("Пользователь не авторизован и не имеет прав доступа")
                                         );
                                 }
                         )
@@ -91,8 +91,8 @@ public class IdentityService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<String> delete(String identityId) {
-        return webClientHandler.getPrincipal()
+    public Mono<String> delete(String identityId, String authValue) {
+        return webClientHandler.getPrincipal(authValue)
                 .flatMap(
                         identityPrincipal -> {
 
@@ -106,7 +106,7 @@ public class IdentityService {
                                         );
                             } else
                                 return Mono.error(
-                                        new IdentityWrongIssuesException("Пользователь не авторизован или жулик")
+                                        new IdentityWrongIssuesException("Пользователь не авторизован и не имеет прав доступа")
                                 );
                         }
                 );

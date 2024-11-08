@@ -28,10 +28,10 @@ public class SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
     private final WebClientHandler webClientHandler;
 
-    public Flux<SubscriptionResponse> findByIdentityId(String identityId) {
+    public Flux<SubscriptionResponse> findByIdentityId(String identityId, String authValue) {
         return Flux.zip(
                 subscriptionRepository.findSubscriptionsByIdentityId(Long.valueOf(identityId)),
-                webClientHandler.getPrincipal()
+                webClientHandler.getPrincipal(authValue)
         )
                 .flatMap(
                         objects -> {
@@ -42,7 +42,7 @@ public class SubscriptionService {
                                     (Objects.equals(identity.getId(), subscription.getIdentityId()) ||
                                      Objects.equals(identity.getAuthorities().getFirst(), "ADMIN"))
                             ) {
-                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription));
+                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authValue);
                             } else
                                 return Mono.error(
                                         new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
@@ -51,10 +51,10 @@ public class SubscriptionService {
                 );
     }
 
-    public Mono<SubscriptionResponse> findById(String subscriptionId) {
+    public Mono<SubscriptionResponse> findById(String subscriptionId, String authValue) {
         return Mono.zip(
                 subscriptionRepository.findById(Long.valueOf(subscriptionId)),
-                webClientHandler.getPrincipal()
+                webClientHandler.getPrincipal(authValue)
         )
                 .flatMap(
                         objects -> {
@@ -65,7 +65,7 @@ public class SubscriptionService {
                                     (Objects.equals(principal.getId(), subscription.getIdentityId()) ||
                                      Objects.equals(principal.getAuthorities().getFirst(), "ADMIN"))
                             ) {
-                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription));
+                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authValue);
                             } else
                                 return Mono.error(
                                         new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
@@ -80,9 +80,9 @@ public class SubscriptionService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<SubscriptionResponse> create(Mono<SubscriptionRequest> subscriptionRequestMono) {
+    public Mono<SubscriptionResponse> create(Mono<SubscriptionRequest> subscriptionRequestMono, String authValue) {
         return subscriptionRequestMono.flatMap(
-                subscriptionRequest -> webClientHandler.getPrincipal()
+                subscriptionRequest -> webClientHandler.getPrincipal(authValue)
                         .flatMap(
                                 identityPrincipal -> {
                                     if (identityPrincipal.getIsAuthenticated() &&
@@ -93,9 +93,7 @@ public class SubscriptionService {
                                                 .flatMap(subscriptionRepository::save)
                                                 .flatMap(
                                                         subscription -> subscriptionMapper
-                                                                .toSubscriptionResponse(
-                                                                        Mono.just(subscription)
-                                                                )
+                                                                .toSubscriptionResponse(Mono.just(subscription), authValue)
                                                 );
                                     } else
                                         return Mono.error(
@@ -113,9 +111,9 @@ public class SubscriptionService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<SubscriptionResponse> updateAfterPayment(Mono<PaymentRequest> paymentRequestMono) {
+    public Mono<SubscriptionResponse> updateAfterPayment(Mono<PaymentRequest> paymentRequestMono, String authValue) {
         return paymentRequestMono.flatMap(
-                paymentRequest -> webClientHandler.getPrincipal()
+                paymentRequest -> webClientHandler.getPrincipal(authValue)
                         .flatMap(
                                 identityPrincipal -> {
                                     if (identityPrincipal.getIsAuthenticated() &&
@@ -126,7 +124,7 @@ public class SubscriptionService {
                                                 .flatMap(subscriptionRepository::save)
                                                 .flatMap(
                                                         subscription -> subscriptionMapper
-                                                                .toSubscriptionResponse(Mono.just(subscription))
+                                                                .toSubscriptionResponse(Mono.just(subscription), authValue)
                                                 );
 
                                     } else
@@ -146,10 +144,10 @@ public class SubscriptionService {
             rollbackFor = Exception.class
     )
     public Mono<String> addBookToSubscription(
-            Mono<SubscriptionRequest> requestMono, String bookId
+            Mono<SubscriptionRequest> requestMono, String bookId, String authValue
     ) {
 
-        return Mono.zip(requestMono, webClientHandler.getPrincipal())
+        return Mono.zip(requestMono, webClientHandler.getPrincipal(authValue))
                 .flatMap(
                         objects -> {
                             SubscriptionRequest subscriptionRequest = objects.getT1();

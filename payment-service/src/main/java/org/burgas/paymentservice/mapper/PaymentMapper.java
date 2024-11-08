@@ -25,7 +25,7 @@ public class PaymentMapper {
                 .map(
                         paymentRequest ->
                             Payment.builder()
-                                    .id(paymentRequest.getId() == null ? 0L : paymentRequest.getId())
+                                    .id(paymentRequest.getId())
                                     .paymentTypeId(paymentRequest.getPaymentTypeId())
                                     .subscriptionId(paymentRequest.getSubscriptionId())
                                     .isNew(true)
@@ -33,7 +33,7 @@ public class PaymentMapper {
                 );
     }
 
-    public Mono<PaymentResponse> toPaymentResponse(Mono<Payment> paymentMono) {
+    public Mono<PaymentResponse> toPaymentResponse(Mono<Payment> paymentMono, String authValue) {
         return paymentMono
                 .publishOn(Schedulers.boundedElastic())
                 .handle(
@@ -49,7 +49,7 @@ public class PaymentMapper {
                                                         )
                                                                 .toFuture().get()
                                                 ).subscriptionResponse(
-                                                        webClientHandler.getSubscriptionById(payment.getSubscriptionId())
+                                                        webClientHandler.getSubscriptionById(payment.getSubscriptionId(), authValue)
                                                                 .toFuture().get()
                                                 )
                                                 .build()

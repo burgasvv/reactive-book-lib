@@ -39,9 +39,9 @@ public class AuthorService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<AuthorResponse> createOrUpdate(Mono<AuthorRequest> authorRequestMono) {
+    public Mono<AuthorResponse> createOrUpdate(Mono<AuthorRequest> authorRequestMono, String authValue) {
         return authorRequestMono.flatMap(
-                authorRequest -> webClientHandler.getPrincipal()
+                authorRequest -> webClientHandler.getPrincipal(authValue)
                         .flatMap(
                                 identityPrincipal -> {
                                     if (

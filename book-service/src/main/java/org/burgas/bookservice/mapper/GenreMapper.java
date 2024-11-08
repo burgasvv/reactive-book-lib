@@ -24,12 +24,12 @@ public class GenreMapper {
                         (genreRequest, genreSynchronousSink) ->
                         {
                             try {
-                                Long tempId = genreRequest.getId() == null ? 0L : genreRequest.getId();
+                                Long genreId = genreRequest.getId() == null ? 0L : genreRequest.getId();
                                 genreSynchronousSink.next(
                                         Genre.builder()
-                                                .id(tempId)
+                                                .id(genreRequest.getId())
                                                 .name(genreRequest.getName())
-                                                .isNew(genreRepository.findById(tempId).toFuture().get() == null)
+                                                .isNew(genreRepository.findById(genreId).toFuture().get() == null)
                                                 .build()
                                 );
                             } catch (InterruptedException | ExecutionException e) {

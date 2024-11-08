@@ -12,9 +12,7 @@ public class WebAppConfig {
 
     @Bean
     public WebClient webClient() {
-        return WebClient.builder()
-                .filter(basicAuthentication("admin", "admin"))
-                .build();
+        return WebClient.builder().build();
     }
 
     @Bean

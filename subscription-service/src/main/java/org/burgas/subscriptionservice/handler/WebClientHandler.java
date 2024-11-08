@@ -11,6 +11,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class WebClientHandler {
@@ -21,9 +23,10 @@ public class WebClientHandler {
             name = "getPrincipal",
             fallbackMethod = "fallBackGetPrincipal"
     )
-    public Mono<IdentityPrincipal> getPrincipal() {
+    public Mono<IdentityPrincipal> getPrincipal(String authValue) {
         return webClient.get()
                 .uri("http://localhost:8765/auth/principal")
+                .header(AUTHORIZATION, authValue)
                 .retrieve()
                 .bodyToMono(IdentityPrincipal.class);
     }
@@ -31,18 +34,6 @@ public class WebClientHandler {
     @SuppressWarnings("unused")
     private Mono<IdentityPrincipal> fallBackGetPrincipal(Throwable throwable) {
         return Mono.just(IdentityPrincipal.builder().isAuthenticated(false).build());
-    }
-
-    @SuppressWarnings("unused")
-    @CircuitBreaker(
-            name = "getIdentityByUsername",
-            fallbackMethod = "fallBackGetIdentityByUsername"
-    )
-    public Mono<IdentityResponse> getIdentityByUsername(String username) {
-        return webClient.get()
-                .uri("http://localhost:8888/identities/{username}", username)
-                .retrieve()
-                .bodyToMono(IdentityResponse.class);
     }
 
     @SuppressWarnings("unused")
@@ -54,9 +45,10 @@ public class WebClientHandler {
             name = "getIdentityById",
             fallbackMethod = "fallBackGetIdentityById"
     )
-    public Mono<IdentityResponse> getIdentityById(Long identityId) {
+    public Mono<IdentityResponse> getIdentityById(Long identityId, String authValue) {
         return webClient.get()
                 .uri("http://localhost:8888/identities/identity/{identity-id}", identityId)
+                .header(AUTHORIZATION, authValue)
                 .retrieve()
                 .bodyToMono(IdentityResponse.class);
     }
@@ -70,9 +62,10 @@ public class WebClientHandler {
             name = "getBooksBySubscriptionId",
             fallbackMethod = "fallBackGetBooksBySubscriptionId"
     )
-    public Flux<BookResponse> getBooksBySubscriptionId(Long subscriptionId) {
+    public Flux<BookResponse> getBooksBySubscriptionId(Long subscriptionId, String authValue) {
         return webClient.get()
                 .uri("http://localhost:9000/books/subscription/" + subscriptionId)
+                .header(AUTHORIZATION, authValue)
                 .retrieve()
                 .bodyToFlux(BookResponse.class);
     }

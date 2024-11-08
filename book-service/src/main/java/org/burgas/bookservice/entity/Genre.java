@@ -23,6 +23,6 @@ public class Genre implements Persistable<Long> {
 
     @Override
     public boolean isNew() {
-        return isNew;
+        return isNew || id == null;
     }
 }

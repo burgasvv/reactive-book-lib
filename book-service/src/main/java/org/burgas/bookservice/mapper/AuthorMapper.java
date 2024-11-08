@@ -24,14 +24,14 @@ public class AuthorMapper {
                         (authorRequest, authorSynchronousSink) ->
                         {
                             try {
-                                Long tempId = authorRequest.getId() == null ? 0L : authorRequest.getId();
+                                Long authorId = authorRequest.getId() == null ? 0L : authorRequest.getId();
                                 authorSynchronousSink.next(
                                         Author.builder()
                                                 .id(authorRequest.getId())
                                                 .firstname(authorRequest.getFirstname())
                                                 .lastname(authorRequest.getLastname())
                                                 .patronymic(authorRequest.getPatronymic())
-                                                .isNew(authorRepository.findById(tempId).toFuture().get() == null)
+                                                .isNew(authorRepository.findById(authorId).toFuture().get() == null)
                                                 .build()
                                 );
                             } catch (InterruptedException | ExecutionException e) {

@@ -4,7 +4,6 @@ Content-Type: application/json
 Authorization: Basic admin admin
 
 {
-  "id": 0,
   "name": "MODERATOR"
 }
 
@@ -45,7 +44,7 @@ Content-Type: application/json
 Authorization: Basic admin admin
 
 ###
-@username = somebody
+@username = somebody777
 GET http://localhost:8765/identities/{{username}}
 Content-Type: application/json
 Authorization: Basic admin admin
@@ -235,6 +234,17 @@ Authorization: Basic user user
 
 ###
 POST http://localhost:8765/subscriptions/add-book?bookId=2
+Content-Type: application/json
+Authorization: Basic user user
+
+{
+  "id": 2,
+  "title": "user-sub",
+  "identityId": 2
+}
+
+###
+POST http://localhost:8765/subscriptions/add-book?bookId=1
 Content-Type: application/json
 Authorization: Basic user user
 

@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class PaymentWebHandler {
@@ -16,19 +18,22 @@ public class PaymentWebHandler {
     private final PaymentService paymentService;
 
     public Mono<ServerResponse> handleFindAll(@SuppressWarnings("unused") ServerRequest request) {
-        return ServerResponse.ok().body(paymentService.findAll(), PaymentResponse.class);
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
+        return ServerResponse.ok().body(paymentService.findAll(authValue), PaymentResponse.class);
     }
 
     public Mono<ServerResponse> handleFindById(ServerRequest request) {
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                paymentService.findById(request.pathVariable("payment-id")),
+                paymentService.findById(request.pathVariable("payment-id"), authValue),
                 PaymentResponse.class
         );
     }
 
     public Mono<ServerResponse> handleMakePayment(ServerRequest request) {
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                paymentService.makePayment(request.bodyToMono(PaymentRequest.class)), PaymentResponse.class
+                paymentService.makePayment(request.bodyToMono(PaymentRequest.class), authValue), PaymentResponse.class
         );
     }
 }

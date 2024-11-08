@@ -9,6 +9,8 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class AuthorWebHandler {
@@ -26,8 +28,9 @@ public class AuthorWebHandler {
     }
 
     public Mono<ServerResponse> handleCreateOrUpdate(ServerRequest request) {
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                authorService.createOrUpdate(request.bodyToMono(AuthorRequest.class)),
+                authorService.createOrUpdate(request.bodyToMono(AuthorRequest.class), authValue),
                 AuthorResponse.class
         );
     }

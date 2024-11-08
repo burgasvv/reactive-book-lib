@@ -11,16 +11,28 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class WebClientHandler {
 
     private final WebClient webClient;
 
-    public Mono<IdentityPrincipal> getPrincipal() {
+    @CircuitBreaker(
+            name = "getPrincipal",
+            fallbackMethod = "fallBackGetPrincipal"
+    )
+    public Mono<IdentityPrincipal> getPrincipal(String authValue) {
         return webClient.get()
                 .uri(URI.create("http://localhost:8765/auth/principal"))
+                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(clientResponse -> clientResponse.bodyToMono(IdentityPrincipal.class));
+    }
+
+    @SuppressWarnings("unused")
+    private Mono<IdentityPrincipal> fallBackGetPrincipal(Throwable throwable) {
+        return Mono.just(IdentityPrincipal.builder().username("anonymous").isAuthenticated(false).build());
     }
 
     @CircuitBreaker(
@@ -28,11 +40,12 @@ public class WebClientHandler {
             fallbackMethod = "fallBackUpdatePrincipal"
     )
     public Mono<SubscriptionResponse> updateSubscriptionAfterPayment(
-            Mono<PaymentRequest> paymentRequestMono
+            Mono<PaymentRequest> paymentRequestMono, String authValue
     ) {
         return webClient.put()
                 .uri("http://localhost:9010/subscriptions/edit")
                 .body(paymentRequestMono, PaymentRequest.class)
+                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(response -> response.bodyToMono(SubscriptionResponse.class));
     }
 
@@ -45,9 +58,10 @@ public class WebClientHandler {
             name = "getSubscriptionById",
             fallbackMethod = "fallBackGetSubscriptionById"
     )
-    public Mono<SubscriptionResponse> getSubscriptionById(Long subscriptionId) {
+    public Mono<SubscriptionResponse> getSubscriptionById(Long subscriptionId, String authValue) {
         return webClient.get()
                 .uri("http://localhost:9010/subscriptions/{subscription-id}", subscriptionId)
+                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(clientResponse -> clientResponse.bodyToMono(SubscriptionResponse.class));
     }
 

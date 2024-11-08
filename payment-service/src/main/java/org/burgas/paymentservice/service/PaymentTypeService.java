@@ -42,9 +42,9 @@ public class PaymentTypeService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<PaymentTypeResponse> createOrUpdate(Mono<PaymentTypeRequest> paymentTypeRequestMono) {
+    public Mono<PaymentTypeResponse> createOrUpdate(Mono<PaymentTypeRequest> paymentTypeRequestMono, String authValue) {
         return paymentTypeRequestMono.flatMap(
-                paymentTypeRequest -> webClientHandler.getPrincipal()
+                paymentTypeRequest -> webClientHandler.getPrincipal(authValue)
                         .flatMap(
                                 identityPrincipal -> {
                                     if (

@@ -30,16 +30,16 @@ public class BookMapper {
                         (bookRequest, bookSynchronousSink) ->
                         {
                             try {
-                                Long tempId = bookRequest.getId() == null ? 0L : bookRequest.getId();
+                                Long bookId = bookRequest.getId() == null ? 0L : bookRequest.getId();
                                 bookSynchronousSink.next(
                                         Book.builder()
-                                                .id(tempId)
+                                                .id(bookRequest.getId())
                                                 .title(bookRequest.getTitle())
                                                 .pages(bookRequest.getPages())
                                                 .description(bookRequest.getDescription())
                                                 .authorId(bookRequest.getAuthorId())
                                                 .genreId(bookRequest.getGenreId())
-                                                .isNew(bookRepository.findById(tempId).toFuture().get() == null)
+                                                .isNew(bookRepository.findById(bookId).toFuture().get() == null)
                                                 .build()
                                 );
                             } catch (InterruptedException | ExecutionException e) {

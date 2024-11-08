@@ -24,12 +24,12 @@ public class AuthorityMapper {
                         (authorityRequest, authoritySynchronousSink) ->
                         {
                             try {
-                                Long tempId = authorityRequest.getId() == null ? 0L : authorityRequest.getId();
+                                Long authorityId = authorityRequest.getId() == null ? 0L : authorityRequest.getId();
                                 authoritySynchronousSink.next(
                                         Authority.builder()
-                                                .id(tempId)
+                                                .id(authorityRequest.getId())
                                                 .name(authorityRequest.getName())
-                                                .isNew(authorityRepository.findById(tempId).toFuture().get() == null)
+                                                .isNew(authorityRepository.findById(authorityId).toFuture().get() == null)
                                                 .build()
                                 );
                             } catch (InterruptedException | ExecutionException e) {

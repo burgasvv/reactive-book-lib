@@ -40,8 +40,8 @@ public class GenreService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<GenreResponse> createOrUpdate(Mono<GenreRequest> genreRequestMono) {
-        return Mono.zip(genreRequestMono, webClientHandler.getPrincipal())
+    public Mono<GenreResponse> createOrUpdate(Mono<GenreRequest> genreRequestMono, String authValue) {
+        return Mono.zip(genreRequestMono, webClientHandler.getPrincipal(authValue))
                 .flatMap(
                         objects -> {
                             GenreRequest genreRequest = objects.getT1();

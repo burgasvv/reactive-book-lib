@@ -9,6 +9,8 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 @Component
 @RequiredArgsConstructor
 public class WebClientHandler {
@@ -19,9 +21,10 @@ public class WebClientHandler {
             name = "getPrincipal",
             fallbackMethod = "fallBackGetPrincipal"
     )
-    public Mono<IdentityPrincipal> getPrincipal() {
+    public Mono<IdentityPrincipal> getPrincipal(String authValue) {
         return webClient.get()
                 .uri(URI.create("http://localhost:8765/auth/principal"))
+                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(response -> response.bodyToMono(IdentityPrincipal.class));
     }
 

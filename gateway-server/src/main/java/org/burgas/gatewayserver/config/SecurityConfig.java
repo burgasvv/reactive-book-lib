@@ -48,9 +48,6 @@ public class SecurityConfig {
                                 )
                                 .hasAnyAuthority("USER", "ADMIN")
                 )
-                .formLogin(Customizer.withDefaults())
-                .logout(Customizer.withDefaults())
-
                 .build();
     }
 

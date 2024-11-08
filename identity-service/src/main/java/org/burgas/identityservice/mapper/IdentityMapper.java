@@ -25,7 +25,7 @@ public class IdentityMapper {
         return identityRequestMono
                 .map(
                         identityRequest -> Identity.builder()
-                                .id(identityRequest.getId() == null ? 0L : identityRequest.getId())
+                                .id(identityRequest.getId())
                                 .username(identityRequest.getUsername())
                                 .password(passwordEncoder.encode(identityRequest.getPassword()))
                                 .email(identityRequest.getEmail())
@@ -43,12 +43,12 @@ public class IdentityMapper {
                         (identityRequest, identitySynchronousSink) ->
                         {
                             try {
-                                Long tempId = identityRequest.getId() == null ? 0L : identityRequest.getId();
+                                Long identityId = identityRequest.getId() == null ? 0L : identityRequest.getId();
                                 identitySynchronousSink.next(
                                         Identity.builder()
-                                                .id(tempId)
+                                                .id(identityRequest.getId())
                                                 .username(identityRequest.getUsername())
-                                                .password(identityRepository.findById(tempId).toFuture().get().getPassword())
+                                                .password(identityRepository.findById(identityId).toFuture().get().getPassword())
                                                 .email(identityRequest.getEmail())
                                                 .authorityId(1L)
                                                 .enabled(true)

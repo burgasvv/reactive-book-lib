@@ -4,10 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.burgas.bookservice.dto.BookRequest;
 import org.burgas.bookservice.dto.BookResponse;
 import org.burgas.bookservice.service.BookService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+
+import static org.springframework.http.HttpHeaders.*;
 
 @Component
 @RequiredArgsConstructor
@@ -44,8 +47,9 @@ public class BookWebHandler {
     }
 
     public Mono<ServerResponse> handleCreate(ServerRequest request) {
+        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                bookService.createOrUpdate(request.bodyToMono(BookRequest.class)),
+                bookService.createOrUpdate(request.bodyToMono(BookRequest.class), authValue),
                 BookResponse.class
         );
     }

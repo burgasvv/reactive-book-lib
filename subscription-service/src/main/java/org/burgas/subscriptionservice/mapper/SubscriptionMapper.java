@@ -26,7 +26,7 @@ public class SubscriptionMapper {
                 .map(
                         subscriptionRequest ->
                                 Subscription.builder()
-                                        .id(subscriptionRequest.getId() == null ? 0L : subscriptionRequest.getIdentityId())
+                                        .id(subscriptionRequest.getId())
                                         .title(subscriptionRequest.getTitle())
                                         .identityId(subscriptionRequest.getIdentityId())
                                         .created(LocalDateTime.now())
@@ -57,15 +57,16 @@ public class SubscriptionMapper {
     }
 
     public Mono<SubscriptionResponse> toSubscriptionResponse(
-            Mono<Subscription> subscriptionMono
+            Mono<Subscription> subscriptionMono, String authValue
     ) {
         return subscriptionMono
                 .flatMap(
-                        subscription -> webClientHandler.getIdentityById(subscription.getIdentityId())
+                        subscription -> webClientHandler.getIdentityById(subscription.getIdentityId(), authValue)
                                 .flatMap(
                                         identityResponse -> webClientHandler.getBooksBySubscriptionId(
-                                                subscription.getId()
-                                        ).collectList()
+                                                subscription.getId(), authValue
+                                        )
+                                                .collectList()
                                                 .flatMap(
                                                         bookResponses -> {
                                                             LocalDateTime created = subscription.getCreated();

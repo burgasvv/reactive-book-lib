@@ -23,12 +23,12 @@ public class PaymentTypeMapper {
                 .handle(
                         (paymentTypeRequest, paymentTypeSynchronousSink) -> {
                             try {
-                                Long tempId = paymentTypeRequest.getId() == null ? 0 : paymentTypeRequest.getId();
+                                Long paymentTypeId = paymentTypeRequest.getId() == null ? 0 : paymentTypeRequest.getId();
                                 paymentTypeSynchronousSink.next(
                                         PaymentType.builder()
-                                                .id(tempId)
+                                                .id(paymentTypeRequest.getId())
                                                 .name(paymentTypeRequest.getName())
-                                                .isNew(paymentTypeRepository.findById(tempId).toFuture().get() == null)
+                                                .isNew(paymentTypeRepository.findById(paymentTypeId).toFuture().get() == null)
                                                 .build()
                                 );
                             } catch (InterruptedException | ExecutionException e) {
