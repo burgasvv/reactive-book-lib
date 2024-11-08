@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import java.net.URI;
 
 @Component
 @RequiredArgsConstructor
@@ -19,12 +19,10 @@ public class WebClientHandler {
             name = "getPrincipal",
             fallbackMethod = "fallBackGetPrincipal"
     )
-    public Mono<IdentityPrincipal> getPrincipal(String authValue) {
+    public Mono<IdentityPrincipal> getPrincipal() {
         return webClient.get()
-                .uri("http://localhost:8765/auth/principal")
-                .header(AUTHORIZATION, authValue)
-                .retrieve()
-                .bodyToMono(IdentityPrincipal.class);
+                .uri(URI.create("http://localhost:8765/auth/principal"))
+                .exchangeToMono(response -> response.bodyToMono(IdentityPrincipal.class));
     }
 
     @SuppressWarnings("unused")

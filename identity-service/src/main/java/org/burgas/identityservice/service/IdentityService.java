@@ -28,7 +28,8 @@ public class IdentityService {
 
     public Flux<IdentityResponse> findAll() {
         return identityRepository.findAll()
-                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)));
+                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)))
+                .log("IDENTITY-SERVICE FindAllIdentities");
     }
 
     public Mono<IdentityResponse> findByUsername(String username) {
@@ -64,9 +65,9 @@ public class IdentityService {
                     Exception.class
             }
     )
-    public Mono<IdentityResponse> update(Mono<IdentityRequest> identityRequestMono, String authorization) {
+    public Mono<IdentityResponse> update(Mono<IdentityRequest> identityRequestMono) {
         return identityRequestMono.flatMap(
-                identityRequest -> webClientHandler.getPrincipal(authorization)
+                identityRequest -> webClientHandler.getPrincipal()
                         .flatMap(
                                 identityPrincipal -> {
 
@@ -90,8 +91,8 @@ public class IdentityService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<String> delete(String identityId, String authorizationValue) {
-        return webClientHandler.getPrincipal(authorizationValue)
+    public Mono<String> delete(String identityId) {
+        return webClientHandler.getPrincipal()
                 .flatMap(
                         identityPrincipal -> {
 

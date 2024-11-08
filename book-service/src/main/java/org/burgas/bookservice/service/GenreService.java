@@ -3,6 +3,7 @@ package org.burgas.bookservice.service;
 import lombok.RequiredArgsConstructor;
 import org.burgas.bookservice.dto.GenreRequest;
 import org.burgas.bookservice.dto.GenreResponse;
+import org.burgas.bookservice.dto.IdentityPrincipal;
 import org.burgas.bookservice.handler.WebClientHandler;
 import org.burgas.bookservice.mapper.GenreMapper;
 import org.burgas.bookservice.repository.GenreRepository;
@@ -39,24 +40,24 @@ public class GenreService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<GenreResponse> createOrUpdate(Mono<GenreRequest> genreRequestMono, String authValue) {
-        return genreRequestMono.flatMap(
-                genreRequest -> webClientHandler.getPrincipal(authValue)
-                        .flatMap(
-                                identityPrincipal -> {
-                                    if (
-                                            identityPrincipal.getIsAuthenticated() &&
-                                            Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
-                                    ) {
-                                        return genreMapper.toGenre(Mono.just(genreRequest))
-                                                .flatMap(genreRepository::save)
-                                                .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
-                                    } else
-                                        return Mono.error(
-                                                new RuntimeException("Пользователь не авторизован или не имеет прав доступа")
-                                        );
-                                }
-                        )
-        );
+    public Mono<GenreResponse> createOrUpdate(Mono<GenreRequest> genreRequestMono) {
+        return Mono.zip(genreRequestMono, webClientHandler.getPrincipal())
+                .flatMap(
+                        objects -> {
+                            GenreRequest genreRequest = objects.getT1();
+                            IdentityPrincipal identityPrincipal = objects.getT2();
+                            if (
+                                    identityPrincipal.getIsAuthenticated() &&
+                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                            ) {
+                                return genreMapper.toGenre(Mono.just(genreRequest))
+                                        .flatMap(genreRepository::save)
+                                        .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
+                            } else
+                                return Mono.error(
+                                        new RuntimeException("Пользователь не авторизован или не имеет прав доступа")
+                                );
+                        }
+                );
     }
 }

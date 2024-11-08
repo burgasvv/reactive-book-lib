@@ -9,8 +9,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-
 @Component
 @RequiredArgsConstructor
 public class IdentityWebHandler {
@@ -20,7 +18,8 @@ public class IdentityWebHandler {
     public Mono<ServerResponse> handleFindAllIdentities(
             @SuppressWarnings("unused") ServerRequest serverRequest
     ) {
-        return ServerResponse.ok().body(identityService.findAll(), IdentityResponse.class);
+        return ServerResponse.ok().body(identityService.findAll(), IdentityResponse.class)
+                .log("IDENTITY-HANDLER Find-All-Identities");
     }
 
     public Mono<ServerResponse> handleFindIdentityByUsername(ServerRequest serverRequest) {
@@ -45,19 +44,15 @@ public class IdentityWebHandler {
     }
 
     public Mono<ServerResponse> handleUpdateIdentity(ServerRequest serverRequest) {
-        String authorization = serverRequest.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                identityService.update(serverRequest.bodyToMono(IdentityRequest.class), authorization),
+                identityService.update(serverRequest.bodyToMono(IdentityRequest.class)),
                 IdentityResponse.class
         );
     }
 
     public Mono<ServerResponse> handleDeleteIdentity(ServerRequest serverRequest) {
-        String authorizationValue = serverRequest.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                identityService.delete(
-                        serverRequest.queryParam("identityId").orElse(null), authorizationValue
-                ),
+                identityService.delete(serverRequest.queryParam("identityId").orElse(null)),
                 String.class
         );
     }

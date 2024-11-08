@@ -27,17 +27,17 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final WebClientHandler webClientHandler;
 
-    public Flux<PaymentResponse> findAll(String authValue) {
+    public Flux<PaymentResponse> findAll() {
         return paymentRepository.findAll()
                 .flatMap(
-                        payment -> paymentMapper.toPaymentResponse(Mono.just(payment), authValue)
+                        payment -> paymentMapper.toPaymentResponse(Mono.just(payment))
                 );
     }
 
-    public Mono<PaymentResponse> findById(String paymentId, String authValue) {
+    public Mono<PaymentResponse> findById(String paymentId) {
         return paymentRepository.findById(Long.valueOf(paymentId))
                 .flatMap(
-                        payment -> paymentMapper.toPaymentResponse(Mono.just(payment), authValue)
+                        payment -> paymentMapper.toPaymentResponse(Mono.just(payment))
                 );
     }
 
@@ -46,10 +46,10 @@ public class PaymentService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<PaymentResponse> makePayment(Mono<PaymentRequest> paymentRequestMono, String authValue) {
+    public Mono<PaymentResponse> makePayment(Mono<PaymentRequest> paymentRequestMono) {
         return paymentRequestMono
                 .flatMap(
-                        paymentRequest -> webClientHandler.getPrincipal(authValue)
+                        paymentRequest -> webClientHandler.getPrincipal()
                                 .flatMap(
                                         identityPrincipal -> {
                                             if (
@@ -58,10 +58,10 @@ public class PaymentService {
                                             ) {
                                                 Mono<Payment> savedPayment = paymentMapper.toPayment(Mono.just(paymentRequest))
                                                         .flatMap(paymentRepository::save);
-                                                Mono<SubscriptionResponse> subResp = webClientHandler.updateSubscriptionAfterPayment(
-                                                        Mono.just(paymentRequest), authValue
-                                                );
-                                                return paymentMapper.toPaymentResponse(savedPayment, authValue)
+                                                Mono<SubscriptionResponse> subResp = webClientHandler
+                                                        .updateSubscriptionAfterPayment(Mono.just(paymentRequest));
+
+                                                return paymentMapper.toPaymentResponse(savedPayment)
                                                         .flatMap(
                                                                 paymentResponse -> subResp.flatMap(
                                                                         subscriptionResponse ->

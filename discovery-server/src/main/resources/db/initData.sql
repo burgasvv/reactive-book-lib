@@ -7,14 +7,14 @@ drop table if exists payment, payment_type, subscription_book, subscription,
 
 create table if not exists authority(
     id bigserial primary key,
-    name varchar not null
+    name varchar not null unique
 );
 
 create table if not exists identity(
    id bigserial primary key ,
-   username varchar not null ,
+   username varchar not null unique ,
    password varchar not null ,
-   email varchar not null ,
+   email varchar not null unique ,
    enabled boolean not null ,
    authority_id bigserial references authority(id)
        on UPDATE cascade on DELETE cascade
@@ -32,7 +32,7 @@ create table if not exists author (
 
 create table if not exists genre (
      id serial primary key ,
-     name varchar not null
+     name varchar not null unique
 );
 
 create table if not exists book (

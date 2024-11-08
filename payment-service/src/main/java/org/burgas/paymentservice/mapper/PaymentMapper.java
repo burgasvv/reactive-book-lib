@@ -33,7 +33,7 @@ public class PaymentMapper {
                 );
     }
 
-    public Mono<PaymentResponse> toPaymentResponse(Mono<Payment> paymentMono, String authValue) {
+    public Mono<PaymentResponse> toPaymentResponse(Mono<Payment> paymentMono) {
         return paymentMono
                 .publishOn(Schedulers.boundedElastic())
                 .handle(
@@ -49,7 +49,7 @@ public class PaymentMapper {
                                                         )
                                                                 .toFuture().get()
                                                 ).subscriptionResponse(
-                                                        webClientHandler.getSubscriptionById(payment.getSubscriptionId(), authValue)
+                                                        webClientHandler.getSubscriptionById(payment.getSubscriptionId())
                                                                 .toFuture().get()
                                                 )
                                                 .build()

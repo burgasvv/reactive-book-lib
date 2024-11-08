@@ -41,10 +41,10 @@ public class AuthorityService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<AuthorityResponse> createOrUpdate(Mono<AuthorityRequest> authorityRequestMono, String authValue) {
+    public Mono<AuthorityResponse> createOrUpdate(Mono<AuthorityRequest> authorityRequestMono) {
         return authorityRequestMono
                 .flatMap(
-                        authorityRequest -> webClientHandler.getPrincipal(authValue)
+                        authorityRequest -> webClientHandler.getPrincipal()
                                 .flatMap(
                                         identityPrincipal -> {
                                             if (

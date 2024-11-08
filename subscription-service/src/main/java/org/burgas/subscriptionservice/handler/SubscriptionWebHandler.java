@@ -10,8 +10,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-
 @Component
 @RequiredArgsConstructor
 public class SubscriptionWebHandler {
@@ -19,43 +17,39 @@ public class SubscriptionWebHandler {
     private final SubscriptionService subscriptionService;
 
     public Mono<ServerResponse> handleFindByIdentityId(ServerRequest request) {
-        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                subscriptionService.findByIdentityId(request.pathVariable("identity-id"), authValue),
+                subscriptionService.findByIdentityId(request.pathVariable("identity-id")),
                 SubscriptionResponse.class
         );
     }
 
     public Mono<ServerResponse> handleFindById(ServerRequest request) {
-        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                subscriptionService.findById(request.pathVariable("subscription-id"), authValue),
+                subscriptionService.findById(request.pathVariable("subscription-id"))
+                        .log("SUBSCRIPTION-HANDLER"),
                 SubscriptionResponse.class
         );
     }
 
     public Mono<ServerResponse> handleCreateSubscription(ServerRequest request) {
-        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                subscriptionService.create(request.bodyToMono(SubscriptionRequest.class), authValue),
+                subscriptionService.create(request.bodyToMono(SubscriptionRequest.class)),
                 SubscriptionResponse.class
         );
     }
 
     public Mono<ServerResponse> handleUpdateSubscription(ServerRequest request) {
-        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                subscriptionService.updateAfterPayment(request.bodyToMono(PaymentRequest.class), authValue),
+                subscriptionService.updateAfterPayment(request.bodyToMono(PaymentRequest.class)),
                 SubscriptionResponse.class
         );
     }
 
     public Mono<ServerResponse> handleAddBookToSubscription(ServerRequest request) {
-        String authValue = request.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
                 subscriptionService.addBookToSubscription(
                         request.bodyToMono(SubscriptionRequest.class),
-                        request.queryParam("bookId").orElse(null), authValue
+                        request.queryParam("bookId").orElse(null)
                 ),
                 String.class
         );

@@ -53,9 +53,9 @@ public class BookService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<BookResponse> createOrUpdate(Mono<BookRequest> bookRequestMono, String authValue) {
+    public Mono<BookResponse> createOrUpdate(Mono<BookRequest> bookRequestMono) {
         return bookRequestMono.flatMap(
-                bookRequest -> webClientHandler.getPrincipal(authValue)
+                bookRequest -> webClientHandler.getPrincipal()
                         .flatMap(
                                 identityPrincipal -> {
                                     if (

@@ -4,6 +4,7 @@ Content-Type: application/json
 Authorization: Basic admin admin
 
 {
+  "id": 0,
   "name": "MODERATOR"
 }
 
@@ -177,10 +178,10 @@ Content-Type: application/json
 Authorization: Basic admin admin
 
 ###
-@identity-id = 1
+@identity-id = 2
 GET http://localhost:8765/subscriptions/identity/{{identity-id}}
 Content-Type: application/json
-Authorization: Basic admin admin
+Authorization: Basic user user
 
 ###
 GET http://localhost:8765/payment-types
@@ -197,7 +198,6 @@ Content-Type: application/json
 Authorization: Basic admin admin
 
 {
-  "id": 0,
   "name": "Paypal"
 }
 

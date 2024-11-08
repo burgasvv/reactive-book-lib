@@ -11,18 +11,15 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-
 @Component
 @RequiredArgsConstructor
 public class WebClientHandler {
 
     private final WebClient webClient;
 
-    public Mono<IdentityPrincipal> getPrincipal(String authValue) {
+    public Mono<IdentityPrincipal> getPrincipal() {
         return webClient.get()
                 .uri(URI.create("http://localhost:8765/auth/principal"))
-                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(clientResponse -> clientResponse.bodyToMono(IdentityPrincipal.class));
     }
 
@@ -31,12 +28,11 @@ public class WebClientHandler {
             fallbackMethod = "fallBackUpdatePrincipal"
     )
     public Mono<SubscriptionResponse> updateSubscriptionAfterPayment(
-            Mono<PaymentRequest> paymentRequestMono, String authValue
+            Mono<PaymentRequest> paymentRequestMono
     ) {
         return webClient.put()
                 .uri("http://localhost:9010/subscriptions/edit")
                 .body(paymentRequestMono, PaymentRequest.class)
-                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(response -> response.bodyToMono(SubscriptionResponse.class));
     }
 
@@ -49,10 +45,9 @@ public class WebClientHandler {
             name = "getSubscriptionById",
             fallbackMethod = "fallBackGetSubscriptionById"
     )
-    public Mono<SubscriptionResponse> getSubscriptionById(Long subscriptionId, String authValue) {
+    public Mono<SubscriptionResponse> getSubscriptionById(Long subscriptionId) {
         return webClient.get()
                 .uri("http://localhost:9010/subscriptions/{subscription-id}", subscriptionId)
-                .header(AUTHORIZATION, authValue)
                 .exchangeToMono(clientResponse -> clientResponse.bodyToMono(SubscriptionResponse.class));
     }
 

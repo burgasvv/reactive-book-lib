@@ -88,6 +88,8 @@ public class IdentityMapper {
                                 identityResponseSynchronousSink.error(new RuntimeException(e));
                             }
                         }
-                );
+                )
+                .log("IDENTITY-MAPPER toIdentityResponse")
+                .cast(IdentityResponse.class);
     }
 }

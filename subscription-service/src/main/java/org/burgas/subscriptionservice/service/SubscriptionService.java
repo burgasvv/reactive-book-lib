@@ -28,20 +28,21 @@ public class SubscriptionService {
     private final SubscriptionMapper subscriptionMapper;
     private final WebClientHandler webClientHandler;
 
-    public Flux<SubscriptionResponse> findByIdentityId(String identityId, String authorizeValue) {
+    public Flux<SubscriptionResponse> findByIdentityId(String identityId) {
         return Flux.zip(
                 subscriptionRepository.findSubscriptionsByIdentityId(Long.valueOf(identityId)),
-                webClientHandler.getPrincipal(authorizeValue)
+                webClientHandler.getPrincipal()
         )
                 .flatMap(
                         objects -> {
                             Subscription subscription = objects.getT1();
                             IdentityPrincipal identity = objects.getT2();
                             if (
-                                    (identity.getIsAuthenticated() && Objects.equals(identity.getId(), subscription.getIdentityId())) ||
-                                    (identity.getIsAuthenticated() && Objects.equals(identity.getAuthorities().getFirst(), "ADMIN"))
+                                    identity.getIsAuthenticated() &&
+                                    (Objects.equals(identity.getId(), subscription.getIdentityId()) ||
+                                     Objects.equals(identity.getAuthorities().getFirst(), "ADMIN"))
                             ) {
-                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue);
+                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription));
                             } else
                                 return Mono.error(
                                         new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
@@ -50,26 +51,28 @@ public class SubscriptionService {
                 );
     }
 
-    public Mono<SubscriptionResponse> findById(String subscriptionId, String authorizeValue) {
-        Mono<Subscription> subscriptionMono = subscriptionRepository.findById(Long.valueOf(subscriptionId));
-        Mono<IdentityPrincipal> principalMono = webClientHandler.getPrincipal(authorizeValue);
-        return Mono.zip(subscriptionMono, principalMono)
+    public Mono<SubscriptionResponse> findById(String subscriptionId) {
+        return Mono.zip(
+                subscriptionRepository.findById(Long.valueOf(subscriptionId)),
+                webClientHandler.getPrincipal()
+        )
                 .flatMap(
                         objects -> {
                             Subscription subscription = objects.getT1();
                             IdentityPrincipal principal = objects.getT2();
                             if (
-                                    (principal.getIsAuthenticated() && Objects.equals(principal.getId(), subscription.getIdentityId()))
-                                    ||
-                                    (principal.getIsAuthenticated() && Objects.equals(principal.getAuthorities().getFirst(), "ADMIN"))
+                                    principal.getIsAuthenticated() &&
+                                    (Objects.equals(principal.getId(), subscription.getIdentityId()) ||
+                                     Objects.equals(principal.getAuthorities().getFirst(), "ADMIN"))
                             ) {
-                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authorizeValue);
+                                return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription));
                             } else
                                 return Mono.error(
                                         new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
                                 );
                         }
-                );
+                )
+                .log("SUBSCRIPTION-SERVICE");
     }
 
     @Transactional(
@@ -77,9 +80,9 @@ public class SubscriptionService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<SubscriptionResponse> create(Mono<SubscriptionRequest> subscriptionRequestMono, String authorizeValue) {
+    public Mono<SubscriptionResponse> create(Mono<SubscriptionRequest> subscriptionRequestMono) {
         return subscriptionRequestMono.flatMap(
-                subscriptionRequest -> webClientHandler.getPrincipal(authorizeValue)
+                subscriptionRequest -> webClientHandler.getPrincipal()
                         .flatMap(
                                 identityPrincipal -> {
                                     if (identityPrincipal.getIsAuthenticated() &&
@@ -91,7 +94,7 @@ public class SubscriptionService {
                                                 .flatMap(
                                                         subscription -> subscriptionMapper
                                                                 .toSubscriptionResponse(
-                                                                        Mono.just(subscription), authorizeValue
+                                                                        Mono.just(subscription)
                                                                 )
                                                 );
                                     } else
@@ -110,9 +113,9 @@ public class SubscriptionService {
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
-    public Mono<SubscriptionResponse> updateAfterPayment(Mono<PaymentRequest> paymentRequestMono, String authorizeValue) {
+    public Mono<SubscriptionResponse> updateAfterPayment(Mono<PaymentRequest> paymentRequestMono) {
         return paymentRequestMono.flatMap(
-                paymentRequest -> webClientHandler.getPrincipal(authorizeValue)
+                paymentRequest -> webClientHandler.getPrincipal()
                         .flatMap(
                                 identityPrincipal -> {
                                     if (identityPrincipal.getIsAuthenticated() &&
@@ -123,9 +126,7 @@ public class SubscriptionService {
                                                 .flatMap(subscriptionRepository::save)
                                                 .flatMap(
                                                         subscription -> subscriptionMapper
-                                                                .toSubscriptionResponse(
-                                                                        Mono.just(subscription), authorizeValue
-                                                                )
+                                                                .toSubscriptionResponse(Mono.just(subscription))
                                                 );
 
                                     } else
@@ -145,10 +146,10 @@ public class SubscriptionService {
             rollbackFor = Exception.class
     )
     public Mono<String> addBookToSubscription(
-            Mono<SubscriptionRequest> requestMono, String bookId, String authorizeValue
+            Mono<SubscriptionRequest> requestMono, String bookId
     ) {
-        Mono<IdentityPrincipal> principal = webClientHandler.getPrincipal(authorizeValue);
-        return Mono.zip(requestMono, principal)
+
+        return Mono.zip(requestMono, webClientHandler.getPrincipal())
                 .flatMap(
                         objects -> {
                             SubscriptionRequest subscriptionRequest = objects.getT1();
