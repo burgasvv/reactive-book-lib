@@ -4,13 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.burgas.bookservice.dto.GenreRequest;
 import org.burgas.bookservice.dto.GenreResponse;
 import org.burgas.bookservice.service.GenreService;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import static org.springframework.http.HttpHeaders.*;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Component
 @RequiredArgsConstructor
