@@ -1,4 +1,4 @@
-package org.burgas.identityservice.handler;
+package org.burgas.paymentservice.handler;
 
 import lombok.Getter;
 import org.springframework.beans.factory.ObjectProvider;
@@ -26,37 +26,32 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @Component
 public class ErrorWebExceptionHandler extends AbstractErrorWebExceptionHandler {
 
-    private final ObjectProvider<ViewResolver> viewResolvers;
     private final ServerCodecConfigurer serverCodecConfigurer;
+    private final ObjectProvider<ViewResolver> viewResolvers;
 
     public ErrorWebExceptionHandler(
             ErrorAttributes errorAttributes,
-            WebProperties.Resources resources,
-            ApplicationContext applicationContext,
-            ObjectProvider<ViewResolver> viewResolvers,
-            ServerCodecConfigurer serverCodecConfigurer
+            WebProperties.Resources resources, ApplicationContext applicationContext,
+            ObjectProvider<ViewResolver> viewResolvers, ServerCodecConfigurer serverCodecConfigurer
     ) {
         super(errorAttributes, resources, applicationContext);
-        this.viewResolvers = viewResolvers;
         this.serverCodecConfigurer = serverCodecConfigurer;
+        this.viewResolvers = viewResolvers;
         super.setMessageReaders(serverCodecConfigurer.getReaders());
         super.setMessageWriters(serverCodecConfigurer.getWriters());
-        super.setViewResolvers(viewResolvers.orderedStream().toList());
+        super.setViewResolvers(viewResolvers.stream().toList());
     }
 
     @Override
     protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
         return RouterFunctions.route(
-                RequestPredicates.all(),
-                request -> {
-                    Map<String, Object> errors = errorAttributes.getErrorAttributes(
-                            request,
-                            of(MESSAGE, STATUS, EXCEPTION, STACK_TRACE, ERROR, BINDING_ERRORS, PATH)
+                RequestPredicates.all(), request -> {
+                    Map<String, Object> error = errorAttributes.getErrorAttributes(
+                            request, of(PATH, BINDING_ERRORS, ERROR, EXCEPTION, STATUS, MESSAGE, STACK_TRACE)
                     );
-                    return ServerResponse
-                            .status(INTERNAL_SERVER_ERROR)
+                    return ServerResponse.status(INTERNAL_SERVER_ERROR)
                             .contentType(APPLICATION_JSON)
-                            .body(BodyInserters.fromValue(errors));
+                            .body(BodyInserters.fromValue(error));
                 }
         );
     }

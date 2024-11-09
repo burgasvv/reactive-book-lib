@@ -1,4 +1,4 @@
-package org.burgas.identityservice.handler;
+package org.burgas.bookservice.handler;
 
 import lombok.Getter;
 import org.springframework.beans.factory.ObjectProvider;
@@ -19,44 +19,39 @@ import java.util.Map;
 
 import static org.springframework.boot.web.error.ErrorAttributeOptions.Include.*;
 import static org.springframework.boot.web.error.ErrorAttributeOptions.of;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Getter
 @Component
 public class ErrorWebExceptionHandler extends AbstractErrorWebExceptionHandler {
 
+    private final ServerCodecConfigurer codecConfigurer;
     private final ObjectProvider<ViewResolver> viewResolvers;
-    private final ServerCodecConfigurer serverCodecConfigurer;
 
     public ErrorWebExceptionHandler(
-            ErrorAttributes errorAttributes,
-            WebProperties.Resources resources,
-            ApplicationContext applicationContext,
-            ObjectProvider<ViewResolver> viewResolvers,
-            ServerCodecConfigurer serverCodecConfigurer
+            ErrorAttributes errorAttributes, WebProperties.Resources resources,
+            ApplicationContext applicationContext, ServerCodecConfigurer codecConfigurer,
+            ObjectProvider<ViewResolver> viewResolvers
     ) {
         super(errorAttributes, resources, applicationContext);
+        this.codecConfigurer = codecConfigurer;
         this.viewResolvers = viewResolvers;
-        this.serverCodecConfigurer = serverCodecConfigurer;
-        super.setMessageReaders(serverCodecConfigurer.getReaders());
-        super.setMessageWriters(serverCodecConfigurer.getWriters());
-        super.setViewResolvers(viewResolvers.orderedStream().toList());
+        super.setMessageReaders(codecConfigurer.getReaders());
+        super.setMessageWriters(codecConfigurer.getWriters());
+        super.setViewResolvers(viewResolvers.stream().toList());
     }
 
     @Override
     protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
         return RouterFunctions.route(
-                RequestPredicates.all(),
-                request -> {
-                    Map<String, Object> errors = errorAttributes.getErrorAttributes(
-                            request,
-                            of(MESSAGE, STATUS, EXCEPTION, STACK_TRACE, ERROR, BINDING_ERRORS, PATH)
+                RequestPredicates.all(), request -> {
+                    Map<String, Object> error = errorAttributes.getErrorAttributes(
+                            request, of(MESSAGE, EXCEPTION, ERROR, STACK_TRACE, PATH, BINDING_ERRORS, STATUS)
                     );
-                    return ServerResponse
-                            .status(INTERNAL_SERVER_ERROR)
+                    return ServerResponse.status(BAD_REQUEST)
                             .contentType(APPLICATION_JSON)
-                            .body(BodyInserters.fromValue(errors));
+                            .body(BodyInserters.fromValue(error));
                 }
         );
     }
