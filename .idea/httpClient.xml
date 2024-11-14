@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="HttpClientEndpointsTabState">
-    <option name="requestToText" value="&lt;CachedHttpClientTabRequests&gt;&#10;  &lt;entry key=&quot;ddc120a3f34a343dae86a653aa49dfb4f43510df&quot; value=&quot;###&amp;#10;PUT http://localhost:9010/subscriptions/edit&quot; /&gt;&#10;  &lt;entry key=&quot;ccc3ab4882573bbee2dc7888cb8e2422f347f54e&quot; value=&quot;###&amp;#10;GET http://localhost:9010/subscriptions/1&amp;#10;Content-Type: application/json&amp;#10;Authorization: Basic admin admin&quot; /&gt;&#10;  &lt;entry key=&quot;930cf6f0977c576c425468f463a12ef9ad85a851&quot; value=&quot;###&amp;#10;GET http://localhost:9000/authors&quot; /&gt;&#10;&lt;/CachedHttpClientTabRequests&gt;" />
+    <option name="requestToText" value="&lt;CachedHttpClientTabRequests&gt;&#10;  &lt;entry key=&quot;ccc3ab4882573bbee2dc7888cb8e2422f347f54e&quot; value=&quot;###&amp;#10;GET http://localhost:9010/subscriptions/1&quot; /&gt;&#10;  &lt;entry key=&quot;5adee07b9bc151bf9f7dbab0876e5dbc434dc850&quot; value=&quot;###&amp;#10;GET http://localhost:8765/auth/principal&quot; /&gt;&#10;&lt;/CachedHttpClientTabRequests&gt;" />
   </component>
 </project>

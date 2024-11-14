@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.burgas.gatewayserver.dto.IdentityPrincipal;
 import org.burgas.gatewayserver.dto.IdentityResponse;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -11,14 +12,20 @@ import java.util.List;
 @RequiredArgsConstructor
 public class IdentityMapper {
 
-    public IdentityPrincipal toIdentityPrincipal(IdentityResponse identityResponse, Boolean isAuthenticated) {
-        return IdentityPrincipal.builder()
-                .id(identityResponse.getId())
-                .username(identityResponse.getUsername())
-                .password(identityResponse.getPassword())
-                .authorities(List.of(identityResponse.getAuthorityResponse().getAuthority()))
-                .enabled(identityResponse.getEnabled())
-                .isAuthenticated(isAuthenticated)
-                .build();
+    public Mono<IdentityPrincipal> toIdentityPrincipal(
+            Mono<IdentityResponse> identityResponseMono, Boolean isAuthenticated
+    ) {
+        return identityResponseMono.flatMap(
+                identityResponse -> Mono.just(
+                        IdentityPrincipal.builder()
+                                .id(identityResponse.getId())
+                                .username(identityResponse.getUsername())
+                                .password(identityResponse.getPassword())
+                                .authorities(List.of(identityResponse.getAuthorityResponse().getAuthority()))
+                                .enabled(identityResponse.getEnabled())
+                                .isAuthenticated(isAuthenticated)
+                                .build()
+                )
+        );
     }
 }
