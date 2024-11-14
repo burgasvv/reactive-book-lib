@@ -9,9 +9,6 @@ import org.burgas.identityservice.service.AuthorityService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-
-import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
@@ -37,59 +34,42 @@ public class IdentityMapper {
     }
 
     public Mono<Identity> toIdentityUpdate(Mono<IdentityRequest> identityRequestMono) {
-        return identityRequestMono
-                .publishOn(Schedulers.boundedElastic())
-                .handle(
-                        (identityRequest, identitySynchronousSink) ->
-                        {
-                            try {
-                                Long identityId = identityRequest.getId() == null ? 0L : identityRequest.getId();
-                                identitySynchronousSink.next(
-                                        Identity.builder()
-                                                .id(identityRequest.getId())
-                                                .username(identityRequest.getUsername())
-                                                .password(identityRepository.findById(identityId).toFuture().get().getPassword())
-                                                .email(identityRequest.getEmail())
-                                                .authorityId(1L)
-                                                .enabled(true)
-                                                .isNew(false)
-                                                .build()
-                                );
-                            } catch (InterruptedException | ExecutionException e) {
-                                identitySynchronousSink.error(new RuntimeException(e));
-                            }
-                        }
-                );
+        return identityRequestMono.flatMap(
+                identityRequest -> {
+                    Long identityId = identityRequest.getId() == null ? 0L : identityRequest.getId();
+                    return identityRepository.findById(identityId)
+                            .flatMap(
+                                    identity -> Mono.just(
+                                            Identity.builder()
+                                                    .id(identityRequest.getId())
+                                                    .username(identityRequest.getUsername())
+                                                    .password(identity.getPassword())
+                                                    .email(identityRequest.getEmail())
+                                                    .authorityId(identity.getAuthorityId())
+                                                    .enabled(identity.getEnabled())
+                                                    .isNew(false)
+                                                    .build()
+                                    )
+                            );
+                }
+        );
     }
 
     public Mono<IdentityResponse> toIdentityResponse(Mono<Identity> identityMono) {
-        return identityMono
-                .publishOn(Schedulers.boundedElastic())
-                .handle(
-                        (identity, identityResponseSynchronousSink) ->
-                        {
-                            try {
-                                identityResponseSynchronousSink.next(
+        return identityMono.flatMap(
+                identity -> authorityService.findById(String.valueOf(identity.getAuthorityId()))
+                        .flatMap(
+                                authorityResponse -> Mono.just(
                                         IdentityResponse.builder()
                                                 .id(identity.getId())
                                                 .username(identity.getUsername())
                                                 .password(identity.getPassword())
                                                 .email(identity.getEmail())
                                                 .enabled(identity.getEnabled())
-                                                .authorityResponse(
-                                                        authorityService.findById(
-                                                                        String.valueOf(identity.getAuthorityId())
-                                                                )
-                                                                .toFuture().get()
-                                                )
+                                                .authorityResponse(authorityResponse)
                                                 .build()
-                                );
-                            } catch (InterruptedException | ExecutionException e) {
-                                identityResponseSynchronousSink.error(new RuntimeException(e));
-                            }
-                        }
-                )
-                .log("IDENTITY-MAPPER toIdentityResponse")
-                .cast(IdentityResponse.class);
+                                )
+                        )
+        );
     }
 }

@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
@@ -45,32 +46,36 @@ public class IdentityService {
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,
-            rollbackFor = {
-                    Exception.class
-            }
+            rollbackFor = Exception.class
     )
-    public Mono<String> create(Mono<IdentityRequest> identityRequestMono) {
-        return identityRequestMono.flatMap(
-                identityRequest ->
-                    identityMapper.toIdentityCreate(Mono.just(identityRequest))
-                            .flatMap(identityRepository::save)
-                            .map(identity -> "Пользователь с именем " + identity.getUsername() + " успешно создан")
-        );
+    public Mono<IdentityResponse> create(Mono<IdentityRequest> identityRequestMono, String authValue) {
+        return webClientHandler.getPrincipal(authValue)
+                .flatMap(
+                        identityPrincipal -> Optional.of(identityPrincipal)
+                                .filter(principal -> !principal.getIsAuthenticated())
+                                .map(
+                                        _ -> identityMapper.toIdentityCreate(identityRequestMono)
+                                                .flatMap(identityRepository::save)
+                                                .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)))
+                                )
+                                .orElseGet(
+                                        () -> Mono.error(
+                                                new RuntimeException("Выйдите из аккаунта, чтобы создать новый")
+                                        )
+                                )
+                );
     }
 
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,
-            rollbackFor = {
-                    Exception.class
-            }
+            rollbackFor = Exception.class
     )
     public Mono<IdentityResponse> update(Mono<IdentityRequest> identityRequestMono, String authValue) {
         return identityRequestMono.flatMap(
                 identityRequest -> webClientHandler.getPrincipal(authValue)
                         .flatMap(
                                 identityPrincipal -> {
-                                    System.out.println(identityPrincipal);
                                     if (identityPrincipal.getIsAuthenticated() &&
                                         Objects.equals(identityPrincipal.getId(), identityRequest.getId())
                                     ) {

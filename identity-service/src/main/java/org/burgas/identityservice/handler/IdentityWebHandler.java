@@ -39,9 +39,10 @@ public class IdentityWebHandler {
     }
 
     public Mono<ServerResponse> handleCreateIdentity(ServerRequest serverRequest) {
+        String authValue = serverRequest.headers().firstHeader(AUTHORIZATION);
         return ServerResponse.ok().body(
-                identityService.create(serverRequest.bodyToMono(IdentityRequest.class)),
-                String.class
+                identityService.create(serverRequest.bodyToMono(IdentityRequest.class), authValue),
+                IdentityResponse.class
         );
     }
 
