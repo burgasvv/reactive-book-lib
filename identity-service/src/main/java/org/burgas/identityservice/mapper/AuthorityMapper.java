@@ -7,9 +7,6 @@ import org.burgas.identityservice.entity.Authority;
 import org.burgas.identityservice.repository.AuthorityRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-
-import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,25 +15,31 @@ public class AuthorityMapper {
     private final AuthorityRepository authorityRepository;
 
     public Mono<Authority> toAuthority(Mono<AuthorityRequest> authorityRequestMono) {
-        return authorityRequestMono
-                .publishOn(Schedulers.boundedElastic())
-                .handle(
-                        (authorityRequest, authoritySynchronousSink) ->
-                        {
-                            try {
-                                Long authorityId = authorityRequest.getId() == null ? 0L : authorityRequest.getId();
-                                authoritySynchronousSink.next(
-                                        Authority.builder()
-                                                .id(authorityRequest.getId())
-                                                .name(authorityRequest.getName())
-                                                .isNew(authorityRepository.findById(authorityId).toFuture().get() == null)
-                                                .build()
-                                );
-                            } catch (InterruptedException | ExecutionException e) {
-                                authoritySynchronousSink.error(new RuntimeException(e));
-                            }
-                        }
-                );
+        return authorityRequestMono.flatMap(
+                authorityRequest -> {
+                    Long authorityId = authorityRequest.getId() == null ? 0L : authorityRequest.getId();
+                    return authorityRepository.findById(authorityId)
+                            .mapNotNull(authority -> authority)
+                            .flatMap(
+                                    _ -> Mono.just(
+                                            Authority.builder()
+                                                    .id(authorityRequest.getId())
+                                                    .name(authorityRequest.getName())
+                                                    .isNew(false)
+                                                    .build()
+                                    )
+                            )
+                            .switchIfEmpty(
+                                    Mono.just(
+                                            Authority.builder()
+                                                    .id(authorityRequest.getId())
+                                                    .name(authorityRequest.getName())
+                                                    .isNew(true)
+                                                    .build()
+                                    )
+                            );
+                }
+        );
     }
 
     public Mono<AuthorityResponse> toAuthorityResponse(Mono<Authority> authorityMono) {

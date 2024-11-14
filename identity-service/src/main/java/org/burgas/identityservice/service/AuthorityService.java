@@ -28,7 +28,6 @@ public class AuthorityService {
     public Flux<AuthorityResponse> findAll() {
         return authorityRepository.findAll()
                 .flatMap(authority -> authorityMapper.toAuthorityResponse(Mono.just(authority)));
-
     }
 
     public Mono<AuthorityResponse> findById(String authorityId) {
@@ -42,24 +41,21 @@ public class AuthorityService {
             rollbackFor = Exception.class
     )
     public Mono<AuthorityResponse> createOrUpdate(Mono<AuthorityRequest> authorityRequestMono, String authValue) {
-        return authorityRequestMono
+        return webClientHandler.getPrincipal(authValue)
                 .flatMap(
-                        authorityRequest -> webClientHandler.getPrincipal(authValue)
-                                .flatMap(
-                                        identityPrincipal -> {
-                                            if (
-                                                    identityPrincipal.getIsAuthenticated() &&
-                                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
-                                            ) {
-                                                return authorityMapper.toAuthority(Mono.just(authorityRequest))
-                                                        .flatMap(authorityRepository::save)
-                                                        .flatMap(authority -> authorityMapper.toAuthorityResponse(Mono.just(authority)));
-                                            } else
-                                                return Mono.error(
-                                                        new RuntimeException("Пользователь не авторизован или не имеет прав доступа")
-                                                );
-                                        }
-                                )
+                        identityPrincipal -> {
+                            if (
+                                    identityPrincipal.getIsAuthenticated() &&
+                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                            ) {
+                                return authorityMapper.toAuthority(authorityRequestMono)
+                                        .flatMap(authorityRepository::save)
+                                        .flatMap(authority -> authorityMapper.toAuthorityResponse(Mono.just(authority)));
+                            } else
+                                return Mono.error(
+                                        new RuntimeException("Пользователь не авторизован или не имеет прав доступа")
+                                );
+                        }
                 );
     }
 }
