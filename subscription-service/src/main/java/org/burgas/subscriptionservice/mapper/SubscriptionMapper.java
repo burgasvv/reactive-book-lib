@@ -1,9 +1,7 @@
 package org.burgas.subscriptionservice.mapper;
 
 import lombok.RequiredArgsConstructor;
-import org.burgas.subscriptionservice.dto.PaymentRequest;
-import org.burgas.subscriptionservice.dto.SubscriptionRequest;
-import org.burgas.subscriptionservice.dto.SubscriptionResponse;
+import org.burgas.subscriptionservice.dto.*;
 import org.burgas.subscriptionservice.entity.Subscription;
 import org.burgas.subscriptionservice.handler.WebClientHandler;
 import org.burgas.subscriptionservice.repository.SubscriptionRepository;
@@ -11,6 +9,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static java.time.format.DateTimeFormatter.ofPattern;
 
@@ -59,36 +58,34 @@ public class SubscriptionMapper {
     public Mono<SubscriptionResponse> toSubscriptionResponse(
             Mono<Subscription> subscriptionMono, String authValue
     ) {
-        return subscriptionMono
-                .flatMap(
-                        subscription -> webClientHandler.getIdentityById(subscription.getIdentityId(), authValue)
-                                .flatMap(
-                                        identityResponse -> webClientHandler.getBooksBySubscriptionId(
-                                                subscription.getId(), authValue
-                                        )
-                                                .collectList()
-                                                .flatMap(
-                                                        bookResponses -> {
-                                                            LocalDateTime created = subscription.getCreated();
-                                                            LocalDateTime updated = subscription.getUpdated();
-                                                            LocalDateTime ended = subscription.getEnded();
-                                                            return Mono.just(
-                                                                    SubscriptionResponse.builder()
-                                                                            .id(subscription.getId())
-                                                                            .title(subscription.getTitle())
-                                                                            .active(subscription.getActive())
-                                                                            .paid(subscription.getPaid())
-                                                                            .created(created != null ? format(created) : null)
-                                                                            .updated(updated != null ? format(updated) : null)
-                                                                            .ended(ended != null ? format(ended) : null)
-                                                                            .identityResponse(identityResponse)
-                                                                            .bookResponses(bookResponses)
-                                                                            .build()
-                                                            );
-                                                        }
-                                                )
-                                )
-                ).log("SUBSCRIPTION-MAPPER toResponse");
+        return subscriptionMono.flatMap(
+                subscription -> Mono.zip(
+                        webClientHandler.getIdentityById(subscription.getIdentityId(), authValue),
+                        webClientHandler.getBooksBySubscriptionId(subscription.getId(), authValue).collectList()
+                )
+                        .flatMap(
+                                objects -> {
+                                    IdentityResponse identityResponse = objects.getT1();
+                                    List<BookResponse> bookResponses = objects.getT2();
+                                    LocalDateTime created = subscription.getCreated();
+                                    LocalDateTime updated = subscription.getUpdated();
+                                    LocalDateTime ended = subscription.getEnded();
+                                    return Mono.fromCallable(
+                                            () -> SubscriptionResponse.builder()
+                                                    .id(subscription.getId())
+                                                    .title(subscription.getTitle())
+                                                    .active(subscription.getActive())
+                                                    .paid(subscription.getPaid())
+                                                    .created(created != null ? format(created) : null)
+                                                    .updated(updated != null ? format(updated) : null)
+                                                    .ended(ended != null ? format(ended) : null)
+                                                    .identityResponse(identityResponse)
+                                                    .bookResponses(bookResponses)
+                                                    .build()
+                                    );
+                                }
+                        )
+        ).log("SUBSCRIPTION-MAPPER toResponse");
     }
 
     private String format(LocalDateTime localDateTime) {
