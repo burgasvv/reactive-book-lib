@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
@@ -26,11 +27,12 @@ public class AuthorService {
     private final WebClientHandler webClientHandler;
 
     public Flux<AuthorResponse> findAll() {
-        return authorRepository.findAll().flatMap(author -> authorMapper.toAuthorResponse(Mono.just(author)));
+        return authorRepository.findAll().cache(Duration.ofMinutes(60))
+                .flatMap(author -> authorMapper.toAuthorResponse(Mono.just(author)));
     }
 
     public Mono<AuthorResponse> findById(String authorId) {
-        return authorRepository.findById(Long.valueOf(authorId))
+        return authorRepository.findById(Long.valueOf(authorId)).cache(Duration.ofMinutes(60))
                 .flatMap(author -> authorMapper.toAuthorResponse(Mono.just(author)));
     }
 
@@ -49,7 +51,7 @@ public class AuthorService {
                                             Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
                                     ) {
                                         return authorMapper.toAuthor(Mono.just(authorRequest))
-                                                .flatMap(authorRepository::save)
+                                                .flatMap(authorRepository::save).cache(Duration.ofMinutes(60))
                                                 .flatMap(author -> authorMapper.toAuthorResponse(Mono.just(author)));
                                     } else
                                         return Mono.error(
@@ -57,6 +59,7 @@ public class AuthorService {
                                         );
                                 }
                         )
-        );
+        )
+                .log("AUTHOR_SERVICE::createOrUpdate");
     }
 }

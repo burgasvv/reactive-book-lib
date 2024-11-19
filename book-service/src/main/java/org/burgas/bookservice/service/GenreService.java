@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
@@ -27,11 +28,12 @@ public class GenreService {
     private final WebClientHandler webClientHandler;
 
     public Flux<GenreResponse> findAll() {
-        return genreRepository.findAll().flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
+        return genreRepository.findAll().cache(Duration.ofMinutes(60))
+                .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
     }
 
     public Mono<GenreResponse> findById(String genreId) {
-        return genreRepository.findById(Long.valueOf(genreId))
+        return genreRepository.findById(Long.valueOf(genreId)).cache(Duration.ofMinutes(60))
                 .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
     }
 
@@ -51,13 +53,14 @@ public class GenreService {
                                     Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
                             ) {
                                 return genreMapper.toGenre(Mono.just(genreRequest))
-                                        .flatMap(genreRepository::save)
+                                        .flatMap(genreRepository::save).cache(Duration.ofMinutes(60))
                                         .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
                             } else
                                 return Mono.error(
                                         new RuntimeException("Пользователь не авторизован или не имеет прав доступа")
                                 );
                         }
-                );
+                )
+                .log("GENRE_SERVICE::createOrUpdate");
     }
 }
