@@ -6,6 +6,8 @@ import org.burgas.bookservice.dto.BookResponse;
 import org.burgas.bookservice.handler.WebClientHandler;
 import org.burgas.bookservice.mapper.BookMapper;
 import org.burgas.bookservice.repository.BookRepository;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -26,28 +28,33 @@ public class BookService {
     private final BookMapper bookMapper;
     private final WebClientHandler webClientHandler;
 
+    @Cacheable("books")
     public Flux<BookResponse> findAll() {
         return bookRepository.findAll().cache(Duration.ofMinutes(60))
                 .flatMap(book -> bookMapper.toBookResponse(Mono.just(book)));
     }
 
+    @Cacheable("book")
     public Mono<BookResponse> findById(String bookId) {
         return bookRepository.findById(Long.valueOf(bookId)).cache(Duration.ofMinutes(60))
                 .flatMap(book -> bookMapper.toBookResponse(Mono.just(book)));
     }
 
+    @Cacheable("books")
     public Flux<BookResponse> findBySubscriptionId(String subscriptionId) {
         return bookRepository.findBooksBySubscriptionId(Long.valueOf(subscriptionId))
                 .cache(Duration.ofMinutes(60))
                 .flatMap(book -> bookMapper.toBookResponse(Mono.just(book)));
     }
 
+    @Cacheable("books")
     public Flux<BookResponse> findByGenreId(String genreId) {
         return bookRepository.findBooksByGenreId(Long.valueOf(genreId))
                 .cache(Duration.ofMinutes(60))
                 .flatMap(book -> bookMapper.toBookResponse(Mono.just(book)));
     }
 
+    @Cacheable("books")
     public Flux<BookResponse> findByAuthorId(String authorId) {
         return bookRepository.findBooksByAuthorId(Long.valueOf(authorId))
                 .cache(Duration.ofSeconds(60))
@@ -55,29 +62,31 @@ public class BookService {
                 .log("BOOK_SERVICE::findByAuthorId");
     }
 
+
+    @CachePut("book")
     @Transactional(
             isolation = SERIALIZABLE, propagation = REQUIRED, rollbackFor = Exception.class
     )
     public Mono<BookResponse> createOrUpdate(Mono<BookRequest> bookRequestMono, String authValue) {
         return bookRequestMono.flatMap(
-                bookRequest -> webClientHandler.getPrincipal(authValue)
-                        .flatMap(
-                                identityPrincipal -> {
-                                    if (
-                                            identityPrincipal.getIsAuthenticated() &&
-                                            Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
-                                    ) {
-                                        return bookMapper.toBook(Mono.just(bookRequest))
-                                                .flatMap(bookRepository::save).cache(Duration.ofMinutes(60))
-                                                .flatMap(book -> bookMapper.toBookResponse(Mono.just(book)));
+                        bookRequest -> webClientHandler.getPrincipal(authValue)
+                                .flatMap(
+                                        identityPrincipal -> {
+                                            if (
+                                                    identityPrincipal.getIsAuthenticated() &&
+                                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                                            ) {
+                                                return bookMapper.toBook(Mono.just(bookRequest))
+                                                        .flatMap(bookRepository::save).cache(Duration.ofMinutes(60))
+                                                        .flatMap(book -> bookMapper.toBookResponse(Mono.just(book)));
 
-                                    } else
-                                        return Mono.error(
-                                                new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
-                                        );
-                                }
-                        )
-        )
+                                            } else
+                                                return Mono.error(
+                                                        new RuntimeException("Пользователь не авторизован и не имеет прав доступа")
+                                                );
+                                        }
+                                )
+                )
                 .log("BOOK_SERVICE::createOrUpdate");
     }
 }

@@ -6,6 +6,8 @@ import org.burgas.bookservice.dto.AuthorResponse;
 import org.burgas.bookservice.handler.WebClientHandler;
 import org.burgas.bookservice.mapper.AuthorMapper;
 import org.burgas.bookservice.repository.AuthorRepository;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -26,16 +28,19 @@ public class AuthorService {
     private final AuthorMapper authorMapper;
     private final WebClientHandler webClientHandler;
 
+    @Cacheable("authors")
     public Flux<AuthorResponse> findAll() {
         return authorRepository.findAll().cache(Duration.ofMinutes(60))
                 .flatMap(author -> authorMapper.toAuthorResponse(Mono.just(author)));
     }
 
+    @Cacheable("author")
     public Mono<AuthorResponse> findById(String authorId) {
         return authorRepository.findById(Long.valueOf(authorId)).cache(Duration.ofMinutes(60))
                 .flatMap(author -> authorMapper.toAuthorResponse(Mono.just(author)));
     }
 
+    @CachePut("author")
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,

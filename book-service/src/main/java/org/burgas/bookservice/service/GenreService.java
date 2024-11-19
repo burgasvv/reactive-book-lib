@@ -7,6 +7,8 @@ import org.burgas.bookservice.dto.IdentityPrincipal;
 import org.burgas.bookservice.handler.WebClientHandler;
 import org.burgas.bookservice.mapper.GenreMapper;
 import org.burgas.bookservice.repository.GenreRepository;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -27,16 +29,19 @@ public class GenreService {
     private final GenreMapper genreMapper;
     private final WebClientHandler webClientHandler;
 
+    @Cacheable("genres")
     public Flux<GenreResponse> findAll() {
         return genreRepository.findAll().cache(Duration.ofMinutes(60))
                 .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
     }
 
+    @Cacheable("genre")
     public Mono<GenreResponse> findById(String genreId) {
         return genreRepository.findById(Long.valueOf(genreId)).cache(Duration.ofMinutes(60))
                 .flatMap(genre -> genreMapper.toGenreResponse(Mono.just(genre)));
     }
 
+    @CachePut("genre")
     @Transactional(
             isolation = SERIALIZABLE,
             propagation = REQUIRED,
