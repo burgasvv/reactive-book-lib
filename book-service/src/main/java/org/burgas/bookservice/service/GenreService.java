@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.Objects;
 
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
@@ -43,7 +44,7 @@ public class GenreService {
 
     @CachePut("genre")
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -55,7 +56,7 @@ public class GenreService {
                             IdentityPrincipal identityPrincipal = objects.getT2();
                             if (
                                     identityPrincipal.getIsAuthenticated() &&
-                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                                    Objects.equals(identityPrincipal.getAuthorities().get(0), "ADMIN")
                             ) {
                                 return genreMapper.toGenre(Mono.just(genreRequest))
                                         .flatMap(genreRepository::save).cache(Duration.ofMinutes(60))

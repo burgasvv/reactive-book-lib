@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
 @Service
@@ -38,7 +38,7 @@ public class PaymentTypeService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -49,7 +49,7 @@ public class PaymentTypeService {
                                 identityPrincipal -> {
                                     if (
                                             identityPrincipal.getIsAuthenticated() &&
-                                            Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                                            Objects.equals(identityPrincipal.getAuthorities().get(0), "ADMIN")
                                     ) {
                                         return paymentTypeMapper.toPaymentType(Mono.just(paymentTypeRequest))
                                                 .flatMap(paymentTypeRepository::save)

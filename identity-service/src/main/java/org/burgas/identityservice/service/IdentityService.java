@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
 @Service
@@ -44,7 +44,7 @@ public class IdentityService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -54,7 +54,7 @@ public class IdentityService {
                         identityPrincipal -> Optional.of(identityPrincipal)
                                 .filter(principal -> !principal.getIsAuthenticated())
                                 .map(
-                                        _ -> identityMapper.toIdentityCreate(identityRequestMono)
+                                        ip -> identityMapper.toIdentityCreate(identityRequestMono)
                                                 .flatMap(identityRepository::save)
                                                 .flatMap(identity -> identityMapper.toIdentityResponse(Mono.just(identity)))
                                 )
@@ -67,7 +67,7 @@ public class IdentityService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -92,7 +92,7 @@ public class IdentityService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )

@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
 @Service
@@ -40,7 +40,7 @@ public class SubscriptionService {
                             if (
                                     identity.getIsAuthenticated() &&
                                     (Objects.equals(identity.getId(), subscription.getIdentityId()) ||
-                                     Objects.equals(identity.getAuthorities().getFirst(), "ADMIN"))
+                                     Objects.equals(identity.getAuthorities().get(0), "ADMIN"))
                             ) {
                                 return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authValue);
                             } else
@@ -63,7 +63,7 @@ public class SubscriptionService {
                             if (
                                     principal.getIsAuthenticated() &&
                                     (Objects.equals(principal.getId(), subscription.getIdentityId()) ||
-                                     Objects.equals(principal.getAuthorities().getFirst(), "ADMIN"))
+                                     Objects.equals(principal.getAuthorities().get(0), "ADMIN"))
                             ) {
                                 return subscriptionMapper.toSubscriptionResponse(Mono.just(subscription), authValue);
                             } else
@@ -76,7 +76,7 @@ public class SubscriptionService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -107,7 +107,7 @@ public class SubscriptionService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -139,7 +139,7 @@ public class SubscriptionService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )

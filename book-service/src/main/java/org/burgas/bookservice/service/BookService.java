@@ -74,7 +74,7 @@ public class BookService {
                                         identityPrincipal -> {
                                             if (
                                                     identityPrincipal.getIsAuthenticated() &&
-                                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                                                    Objects.equals(identityPrincipal.getAuthorities().get(0), "ADMIN")
                                             ) {
                                                 return bookMapper.toBook(Mono.just(bookRequest))
                                                         .flatMap(bookRepository::save).cache(Duration.ofMinutes(60))

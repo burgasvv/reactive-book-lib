@@ -13,7 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
 @Service
@@ -36,7 +36,7 @@ public class AuthorityService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
@@ -46,7 +46,7 @@ public class AuthorityService {
                         identityPrincipal -> {
                             if (
                                     identityPrincipal.getIsAuthenticated() &&
-                                    Objects.equals(identityPrincipal.getAuthorities().getFirst(), "ADMIN")
+                                    Objects.equals(identityPrincipal.getAuthorities().get(0), "ADMIN")
                             ) {
                                 return authorityMapper.toAuthority(authorityRequestMono)
                                         .flatMap(authorityRepository::save)

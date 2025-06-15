@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Objects;
 
-import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
+import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
 @Service
@@ -42,7 +42,7 @@ public class PaymentService {
     }
 
     @Transactional(
-            isolation = SERIALIZABLE,
+            isolation = REPEATABLE_READ,
             propagation = REQUIRED,
             rollbackFor = Exception.class
     )
