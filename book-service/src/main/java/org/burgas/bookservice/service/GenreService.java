@@ -18,7 +18,6 @@ import java.time.Duration;
 import java.util.Objects;
 
 import static org.springframework.transaction.annotation.Isolation.REPEATABLE_READ;
-import static org.springframework.transaction.annotation.Isolation.SERIALIZABLE;
 import static org.springframework.transaction.annotation.Propagation.REQUIRED;
 
 @Service
